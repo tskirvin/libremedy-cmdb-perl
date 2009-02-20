@@ -1,0 +1,13 @@
+Source: libremedy-cmdb-perl
+Section: net
+Priority: extra
+Maintainer: Tim Skirvin <tskirvin@stanford.edu>
+Build-Depends: debhelper (>= 4)
+Build-Depends-Indep: perl
+Standards-Version: 3.7.2
+
+Package: libremedy-ticket-perl
+Architecture: all
+Depends: libremedy-perl
+Description: Remedy CMDB Interface
+ CMDB interface scripts and tools

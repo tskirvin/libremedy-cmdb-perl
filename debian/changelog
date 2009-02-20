@@ -1,0 +1,5 @@
+libremedy-cmdb-perl (1) intrepid UNRELEASED; urgency=low
+
+  * Splitting off from default libremedy-perl
+
+ -- Tim Skirvin <tskirvin@stanford.edu>  Thu, 19 Feb 2009 16:59:02 -0800
