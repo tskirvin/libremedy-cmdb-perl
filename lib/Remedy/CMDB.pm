@@ -35,16 +35,6 @@ impact, etc of the ticket; but there are a few other places for customization.
 
 =cut
 
-our %TEXT = ('debug' => \&Remedy::Form::debug_text);
-
-our %FORM = (
-    'all'      => ['Remedy::Form::Task', 'Remedy::Form::Incident'],
-    'incident' => 'Remedy::Form::Incident',
-    'task'     => 'Remedy::Form::Task',
-);
-    # might add Remedy::Form::Order
-
-
 =back
 
 =cut
@@ -60,20 +50,9 @@ use Class::Struct;
 use Lingua::EN::Inflect qw/inflect/;
 
 use Remedy;
-use Remedy::CMDB::Functions;
-
-use Remedy::Form::Audit;
-use Remedy::Form::Incident;
-use Remedy::Form::People;
-use Remedy::Form::Task;
-use Remedy::Form::CMDBGen;
-use Remedy::Form::Time;
-use Remedy::Form::WorkLog;
 
 our @ISA; 
 push @ISA, qw/Remedy/;
-
-Remedy::Form->register ('ticket', $FORM{'all'});
 
 ##############################################################################
 ### Subroutines
