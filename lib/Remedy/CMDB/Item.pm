@@ -21,12 +21,9 @@ our $VERSION = "0.01";
 use strict;
 use warnings;
 
-use Class::Struct;
+use Remedy::CMDB::XML qw/init_struct/;
 
-class __PACKAGE__ => {
-    'source' => '$',
-    'error'  => '$',
-}
+our @ISA = init_struct (__PACKAGE__);
 
 ##############################################################################
 ### Methods ##################################################################
@@ -40,6 +37,7 @@ class __PACKAGE__ => {
 
 =cut
 
+sub read 
 sub new {
     my ($self, $type, %args) = @_;
     
@@ -58,6 +56,15 @@ sub new {
         $self->error ("invalid type: '$type'");
         return;
     }
+}
+
+sub id      { shift->instanceid->id }
+sub localid { shift->instanceid->localid }
+sub mdrid   { shift->instanceid->mdrid   }
+
+sub fields {
+    'instanceid' => 'Remedy::CMDB::Item::InstanceID',
+    'records'    => '@',
 }
 
 =back
