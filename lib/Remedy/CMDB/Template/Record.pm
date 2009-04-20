@@ -1,4 +1,4 @@
-package Remedy::CMDB::Relationship;
+package Remedy::CMDB::Template::Record;
 our $VERSION = "0.01";
 
 =head1 NAME
@@ -21,13 +21,8 @@ our $VERSION = "0.01";
 use strict;
 use warnings;
 
-use Remedy::CMDB::Item;
-use Remedy::CMDB::Relationship::Record;
-use Remedy::CMDB::Relationship::Source;
-use Remedy::CMDB::Relationship::Target;
-
 use Remedy::CMDB::Struct qw/init_struct/;
-our @ISA = (init_struct (__PACKAGE__), 'Remedy::CMDB::Item');
+our @ISA = init_struct (__PACKAGE__);
 
 ##############################################################################
 ### Methods ##################################################################
@@ -40,31 +35,51 @@ our @ISA = (init_struct (__PACKAGE__), 'Remedy::CMDB::Item');
 =cut
 
 sub fields {
-    'record' => 'Remedy::CMDB::Relationship::Record',
-    'source' => 'Remedy::CMDB::Relationship::Source',
-    'target' => 'Remedy::CMDB::Relationship::Target',
+    'meta' => '%',
+    'type' => '$',
+    'hash' => '%',
 }
+
+=item populate_xml (XML)
+
+=cut
 
 sub populate_xml {
     my ($self, $xml) = @_;
     return 'no xml' unless ($xml && ref $xml);
-    return 'tag type should be relationship' unless 
-        (lc $xml->tag eq 'relationship');
+    return 'tag type should be record' unless (lc $xml->tag eq 'record'); 
+    
+    $self->clear_object;
 
-    foreach my $field (qw/source target record/) {
-        my $id;
-        foreach my $item ($xml->children ($field)) {
-            return 'too many items in $field' if $id;
-            my $obj = ('Remedy::CMDB::Relationship::' . ucfirst $field)->read 
-                ('xml', 'source' => $item, 'type' => 'object');
-            return 'no object created' unless $obj;
-            return $obj unless ref $obj;
-            $id = $obj;
+    my $count;
+    foreach my $child ($xml->children) {
+        my $tag = $child->tag;
+        if ($tag eq 'recordMetadata') { 
+            foreach my $subchild ($child->children) {
+                my $subtag = $subchild->tag;
+                my $subval = $subchild->child_text;
+                $self->meta ($subtag, $subval);
+            }
+        } else {
+            return 'too many items in record' if $count++;
+            $self->type ($tag);
+            foreach my $subchild ($child->children) { 
+                my $subtag = $subchild->tag;
+                my $subval = $subchild->child_text;
+                $self->hash ($subtag, $subval);
+            }
         }
-        $self->$field ($id);
-        return "no $field" unless $self->$field;
     }
+    return 'no items in count' unless $count;
 
+    return;
+}
+
+sub clear_object {
+    my ($self) = @_;
+    $self->meta ({});
+    $self->hash ({});
+    $self->type (undef);
     return;
 }
 
@@ -87,13 +102,22 @@ sub populate_xml {
 sub text {
     my ($self, %args) = @_;
     my @return;
-    foreach my $field (qw/source target/) {
-        push @return, sprintf ("  %s: %s", ucfirst $field, 
-            $self->$field->text);
+
+    if (my $hash = $self->hash) { 
+        push @return, "Data";
+        foreach (keys %{$hash}) {
+            push @return, "  $_: $$hash{$_}";
+        }
     }
-    if (my $record = $self->record) { 
-        foreach ($record->text) { push @return, '  ' . $_; }
-    }
+
+    my $meta = $self->meta;
+    if (scalar keys %{$meta}) {
+        push @return, "Metadata";
+        foreach (keys %{$meta}) { 
+            push @return, "  $_: $$meta{$_}";
+        }
+    } 
+        
     return wantarray ? @return : join ("\n", @return, '');
 }
 
@@ -101,13 +125,32 @@ sub text {
 
 =cut
 
-sub xml {
-    my ($self, %args) = @_;
+sub xml  {
+    my ($self) = @_;
+    return 'not done yet';
 }
 
 =back
 
 =cut
+
+##############################################################################
+### Stubs ####################################################################
+##############################################################################
+
+=head2 Stubs
+
+These functions are stubs; the real work is implemented by the sub-functions.
+
+=over 4
+
+=item tag_type 
+
+=back
+
+=cut
+
+sub tag_type { "not implemented" } 
 
 ##############################################################################
 ### Final Documentation ######################################################

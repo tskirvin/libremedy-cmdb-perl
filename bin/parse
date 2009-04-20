@@ -2,13 +2,16 @@
 
 use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib";
 
+$|++;
+
 use Remedy::CMDB::Register;
 
 my ($file, @rest) = @ARGV;
 die "no file name\n" unless ($file);
 
-my $register = Remedy::CMDB::Register->new ();
-$register->read ('xml', 'type' => 'file', 'source' => $file);
+my $register = Remedy::CMDB::Register->read ('xml', 'type' => 'file', 
+    'source' => $file);
+warn "R: $register\n";
 
 print scalar $register->text;
 

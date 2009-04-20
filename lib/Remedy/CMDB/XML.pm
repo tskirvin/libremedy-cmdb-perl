@@ -67,46 +67,6 @@ sub fields {}
 
 =cut
 
-sub read {
-    my ($self, $type, %opts) = @_;
-
-    if (!$type) {
-        $self->error ('no type set');
-        return;
-    }
-
-    if      (lc $type eq 'xml') { 
-        my $source = $args{'source'};
-        my $xml = XML::Twig->new ();
-
-    } elsif (lc $type eq 'xmlstream')
-        
-        
-
-    if      (lc $type eq 'xml') { 
-        my $source = $args{'source'};
-        return eval { Remedy::CMDB::Relationship::XML->new ($source) };
-    } elsif (lc $type eq 'remedy') { 
-        # write something here soon
-        
-    } else {
-        $self->error ("invalid type: '$type'");
-        return;
-    }
-    
-    my $xml = XML::Twig->new ();
-    unless ($xml->safe_parsefile ($file)) { 
-        die "couldn't parse '$file': $@\n";
-    }
-    my $root = $xml->root;
-
-    $$self{'DATA'} = $root;
-
-    return $self;
-}
-
-sub data { shift->{'DATA'} }
-
 =back
 
 =cut

@@ -21,8 +21,10 @@ our $VERSION = "0.01";
 use strict;
 use warnings;
 
-use Remedy::CMDB::XML qw/init_struct/;
+use Remedy::CMDB::Item::Record;
+use Remedy::CMDB::Item::InstanceID;
 
+use Remedy::CMDB::Struct qw/init_struct/;
 our @ISA = init_struct (__PACKAGE__);
 
 ##############################################################################
@@ -33,30 +35,7 @@ our @ISA = init_struct (__PACKAGE__);
 
 =over 4
 
-=item new (TYPE, ARGHASH)
-
 =cut
-
-sub read 
-sub new {
-    my ($self, $type, %args) = @_;
-    
-    if (!$type) {
-        $self->error ('no type set');
-        return;
-    }
-
-    if      (lc $type eq 'xml') { 
-        my $source = $args{'source'};
-        return eval { Remedy::CMDB::Relationship::XML->new ($source) };
-    } elsif (lc $type eq 'remedy') { 
-        # write something here soon
-        
-    } else {
-        $self->error ("invalid type: '$type'");
-        return;
-    }
-}
 
 sub id      { shift->instanceid->id }
 sub localid { shift->instanceid->localid }
@@ -64,7 +43,42 @@ sub mdrid   { shift->instanceid->mdrid   }
 
 sub fields {
     'instanceid' => 'Remedy::CMDB::Item::InstanceID',
-    'records'    => '@',
+    'record'     => '$',
+}
+
+sub populate_xml {
+    my ($self, $xml) = @_;
+    return 'no xml' unless ($xml && ref $xml);
+    return 'tag type should be item' unless (lc $xml->tag eq 'item');
+
+    {
+        my $id;
+        foreach my $item ($xml->children ('instanceId')) {
+            return 'too many instanceIds' if $id;
+            my $obj = Remedy::CMDB::Item::InstanceID->read ('xml',
+                'source' => $item, 'type' => 'object');
+            return 'no object created' unless $obj;
+            return $obj unless ref $obj;
+            $id = $obj;
+        }
+        $self->instanceid ($id);
+        return "no instanceid" unless $self->instanceid;
+    }
+
+    {
+        my $record;
+        foreach my $item ($xml->children ('record')) {
+            return 'too many objects' if $record;
+            my $obj = Remedy::CMDB::Item::Record->read ('xml', 
+                'source' => $item, 'type' => 'object');
+            return "no object created" unless $obj;
+            return $obj unless ref $obj;
+            $record = $obj;
+        }
+        $self->record ($record);
+    }
+
+    return;
 }
 
 =back
@@ -85,7 +99,20 @@ sub fields {
 
 sub text {
     my ($self, %args) = @_;
-    "populate me";
+    my @return;
+    push @return, "ID: " . $self->instanceid->text;
+    foreach my $record ($self->record) { 
+        foreach ($record->text) { push @return, '  ' . $_; }
+    }
+    return wantarray ? @return : join ("\n", @return, '');
+}
+
+=item xml ()
+
+=cut
+
+sub xml {
+    my ($self, %args) = @_;
 }
 
 =back
@@ -102,8 +129,6 @@ These functions are stubs; the real work is implemented by the sub-functions.
 
 =over 4
 
-=item record
-
 =item source
 
 =item target
@@ -112,7 +137,6 @@ These functions are stubs; the real work is implemented by the sub-functions.
 
 =cut
 
-sub record { "Not implemented" }
 sub source { "Not implemented" }
 sub target { "Not implemented" }
 

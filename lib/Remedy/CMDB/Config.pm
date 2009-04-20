@@ -58,14 +58,14 @@ All of the configuration options below have a related B<Class::Struct> accessor
 
 =over 4
 
-=item $PORT
+=item $SOCKET_FILE
 
-Port to listen to for the cmdb daemon Matches the B<port) accessor            .
+Socket to create/listen to for the CMDB daemon.  Matches the B<file> accessor.
 
 =cut
 
-our $PORT = "5048";
-$FUNCTIONS{'port'} = \$PORT;
+our $SOCKET_FILE = "/tmp/cmdb-socket";
+$FUNCTIONS{'socket_file'} = \$SOCKET_FILE;
 
 =item $CONFIG
 
@@ -78,8 +78,50 @@ Matches the B<config> accessor.
 
 =cut
 
-our $CONFIG = '/etc/remedy/cmdb_config';
+our $CONFIG        = '/etc/remedy/cmdb/config';
 $FUNCTIONS{'config'} = \$CONFIG;
+
+=item $REMEDY_CONFIG
+
+=cut
+
+our $REMEDY_CONFIG = '/etc/remedy/config';
+$FUNCTIONS{'remedy_config'} = \$REMEDY_CONFIG;
+
+=item $DEBUG_LEVEL
+
+Defines how much debugging information to print on user interaction.  Set to
+a string, defaults to I<$Log::Log4perl::ERROR>.  See B<Remedy::Log>.
+
+Matches the I<loglevel> accessor.
+
+=cut
+
+our $DEBUG_LEVEL = $Log::Log4perl::ERROR;
+$FUNCTIONS{'loglevel'} = \$DEBUG_LEVEL;
+
+=item $LOGFILE
+
+If set, we will append logs to this file.  See B<Remedy::Log>.
+
+Matches the I<file> accessor.
+
+=cut
+
+our $LOGFILE = "";
+$FUNCTIONS{'logfile'} = \$LOGFILE;
+
+=item $LOGFILE_LEVEL
+
+Like I<$DEBUG_LEVEL>, but defines the level of log messages we'll print to
+I<$LOGFILE>.  Defaults to I<$Log::Log4perl::INFO>.  See B<Remedy::Log>.
+
+Matches the B<logfile_level> accessor.
+
+=cut
+
+our $LOGFILE_LEVEL = $Log::Log4perl::INFO;
+$FUNCTIONS{'loglevel_file'} = \$LOGFILE_LEVEL;
 
 =back
 
@@ -94,10 +136,13 @@ use warnings;
 
 use Class::Struct;
 
+use Remedy::CMDB::Log;
+
 my %opts;
 foreach (keys %FUNCTIONS) { $opts{$_} = '$' }
 
 struct 'Remedy::CMDB::Config' => { 
+    'log' => 'Remedy::CMDB::Log',
     %opts, 
 };
 
@@ -116,7 +161,9 @@ per-function.
 
 =item config ($)
 
-=item port ($)
+=item file ($)
+
+=item log (B<Remedy::CMDB::Log>)
 
 =back
 
@@ -138,11 +185,20 @@ Returns the new object.
 sub load {
     my ($class, $file) = @_;
     $file ||= $ENV{'REMEDY_CMDB_CONFIG'} || $CONFIG;
-    do $file or LOGDIE ("Couldn't load '$file': " . ($@ || $!) . "\n");
+    do $file or die ("Couldn't load '$file': " . ($@ || $!) . "\n");
     my $self = $class->new ();
 
     $self->config ($file);
     _init_functions ($self);
+
+    my $log = Remedy::CMDB::Log->new (
+        'file'       => $self->logfile,
+        'level'      => $self->loglevel,
+        'level_file' => $self->loglevel_file,
+    );
+    $log->init;
+
+    $self->log ($log);
 
     return $self;
 }

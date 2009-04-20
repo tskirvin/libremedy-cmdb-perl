@@ -1,4 +1,4 @@
-package Remedy::CMDB::Daemon;
+package Remedy::CMDB::Client;
 our $VERSION = "0.01.01";
 # Copyright and license are in the documentation below.
 
@@ -14,12 +14,7 @@ our $VERSION = "0.01.01";
 ### Configuration ############################################################
 ##############################################################################
 
-our $DEBUG = 0;      
-
-our $MAX_CONN = 10;  # maximum number of connections
-
-our $PORT  = '';     # must declare a port;
-our $PROTO = 'tcp'; 
+our $TIMEOUT = 10;
 
 ##############################################################################
 ### Declarations #############################################################
@@ -29,18 +24,16 @@ use strict;
 use warnings;
 
 use Class::Struct;
-use Log::Log4perl;
-use Socket;
+use IO::Socket;
 
-struct 'Remedy::CMDB::Daemon' = {
-    'config'   => 'Remedy::CMDB::Daemon::Config',
-    'maxconn'  => '$',
-    'parent'   => 'Remedy::CMDB',
-    'protocol' => '$',
-    'port'     => '$',
-    'server'   => '$',
-    'socket'   => '$',
-}
+use Remedy::CMDB::Config;
+
+struct 'Remedy::CMDB::Client' => {
+    'config'     => 'Remedy::CMDB::Config',
+    'socket'     => '$',
+    'socketfile' => '$',
+    'timeout'    => '$'
+};
 
 ##############################################################################
 ### Subroutines ##############################################################
@@ -54,43 +47,47 @@ struct 'Remedy::CMDB::Daemon' = {
 
 =cut
 
-sub open {
-    my ($self, $port, %args) = @_;
+sub connect {
+    my ($class, %args) = @_;
+    my $self = $class->new ();
+
+    my $config = $args{'config'} || '';
+    my $conf = ref $config ? $config 
+                           : Remedy::CMDB::Config->load ($config);
+    $self->config ($conf);
+    my $logger = $conf->log->logger;
+
+    $self->timeout ($args{'timeout'} || $TIMEOUT);
+
+    ## Connect to the local socket
+    my $socket_file = $conf->socket_file or $logger->logdie ("no socket file");
+    my $socket = $self->client_open ($socket_file)
+        or $logger->logdie ("couldn't open socket: $@");
+
+    return $self;
+}
+
+sub client_open {
+    my ($self, $file) = @_;
     my $logger = $self->logger_or_die;
+    return $self->socket if ($self->socket);
 
-    $port ||= $self->port || $PORT;
-    return undef unless $port;
+    $logger->logdie ("no file at which to open socket") unless $file;
 
-    my $maxconn  = $args{'maxconn'}  || $self->maxconn  || $MAXCONN;
-    my $protocol = $args{'protocol'} || $self->protocol || $PROTOCOL;
-    return unless ($maxconn && $protocol);
+    $logger->debug ("opening socket at $file");
 
-    # create the socket
-    socket (SERVER, PF_INET, SOCK_STREAM, getprotobyname ($protocol));
+    my $timeout = $self->timeout;
+    my $client = IO::Socket::UNIX->new ('Peer' => $file,
+        Type => SOCK_STREAM, 'Timeout' => $self->timeout) 
+        or $logger->logdie ("couldn't read from socket: $@");
+    $logger->warn ("talking to $file");
 
-    # so we can restart our server quickly
-    setsockopt(SERVER, SOL_SOCKET, SO_REUSEADDR, 1);
-  
-    # build up my socket address
-    unless (bind (SERVER, sockaddr_in($port, INADDR_ANY) ) ) {
-        $logger->error ("couldn't bind to port $port: $@");
-        return;
-    }
-  
-    # establish a queue for incoming connections 
-    unless (listen(SERVER, $maxconn || $MAXCONN || SOMAXCONN) ) {
-        $logger->error ("couldn't listen on port $port: $@");
-        return;
-    }
-    $self->warn ("Listening on port $port");
-    
-    $self->port ($port);
-    $self->socket (\*SERVER);
-
+    $self->socket   ($client);
+    $self->socketfile ($file);
     return $self->socket;
 }
 
-sub close {
+sub server_close {
     my ($self) = @_;
     my $logger = $self->logger_or_die;
     if (my $socket = $self->socket) {
@@ -103,30 +100,12 @@ sub close {
     }
 }
 
-=item connect (FILEHANDLE)
-
-=cut
-
-sub connect {
-    my ($self, $fh) = @_;   
-    my $socket = $self->socket || return;
-    $fh ||= \*CLIENT;
-    accept ($fh, $server);
-    return $fh;
+# eventually, we'll keep the logger in the object, but not yet
+sub logger_or_die { 
+    my ($self) = @_;
+    return unless $self->config;
+    $self->config->log->logger;
 }
-
-sub disconnect {
-    my ($self, $fh) = @_;
-    return unless $fh;
-    return unless defined fileno ($fh);
-    close $fh;
-}
-
-sub process {
-    my ($self, $fh, $line) = @_;
-    
-}
-
 
 =back
 
@@ -135,6 +114,8 @@ sub process {
 ##############################################################################
 ### Internal Subroutines #####################################################
 ##############################################################################
+
+sub DESTROY { }
 
 ##############################################################################
 ### Final Documentation ######################################################

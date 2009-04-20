@@ -1,0 +1,91 @@
+#!/usr/bin/perl
+# Copyright and license are in the documentation below.
+
+=head1 NAME
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
+
+=cut
+
+##############################################################################
+### Configuration ############################################################
+##############################################################################
+
+## Modify and uncomment this to use user modules instead of system-wide 
+## ones.  You'll need this unless you're installing as root.  
+# use lib '/FULL/PATH/TO/PERL/MODULES';
+use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-perl/lib";
+use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib";
+# use lib '/PATH/TO/USER/CODE';
+
+## Print debugging information?  Set with '--debug', can be set many times
+our $DEBUG = 5;
+
+##############################################################################
+### Declarations #############################################################
+##############################################################################
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use Remedy::CMDB::Client;
+
+$0 =~ s%.*/%%g;     # Lose the annoying path information
+$|++;               # Flush output
+
+###############################################################################
+### main() ####################################################################
+###############################################################################
+
+my $parser = Getopt::Long::Parser->new;
+my $result = $parser->getoptions (
+    'd|debug+'      => \$DEBUG,
+    'man'           => sub { pod2usage (-verbose => 2, -noperldoc => 1) },
+    'h|help'        => sub { pod2usage (-verbose => 1) }) || _error_usage ();
+
+my $client = Remedy::CMDB::Client->connect ('DEBUG' => $DEBUG) 
+    or die "couldn't connect to CMDB: $@\n";
+
+my $socket = $client->socket;
+# while (<$socket>) { print }
+print $socket "REGISTER\n";
+while (<>) { print $socket $_ }
+print $socket ".\n";
+while (<$socket>) { print }
+$socket->close;
+
+exit 0;
+
+###############################################################################
+### Documentation #############################################################
+###############################################################################
+
+=head1 NAME
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
+
+=head1 NOTES
+
+=head1 REQUIREMENTS
+
+=head1 SEE ALSO
+
+=head1 TODO
+
+=head1 AUTHOR
+
+Tim Skirvin <tskirvin@stanford.edu>
+
+=head1 LICENSE
+
+Copyright 2009 Board of Trustees, Leland Stanford Jr. University
+
+This program is free software; you may redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut

@@ -1,4 +1,4 @@
-package Remedy::CMDB::Item::InstanceID;
+package Remedy::CMDB::Relationship::Record;
 
 ##############################################################################
 ### Declarations #############################################################
@@ -6,14 +6,14 @@ package Remedy::CMDB::Item::InstanceID;
 
 use strict;
 
-use Remedy::CMDB::Template::ID;
+use Remedy::CMDB::Template::Record;
 
-our @ISA = qw/Remedy::CMDB::Template::ID/;
+our @ISA = qw/Remedy::CMDB::Template::Record/;
 
 ##############################################################################
 ### Overrides ################################################################
 ##############################################################################
 
-sub tag_type { "instanceId" }
+sub tag_type { "record" }
 
 1;
