@@ -36,7 +36,7 @@ our @ISA = init_struct (__PACKAGE__);
 
 sub fields {
     'meta' => '%',
-    'type' => '$',
+    'datatype' => '$',
     'hash' => '%',
 }
 
@@ -62,7 +62,7 @@ sub populate_xml {
             }
         } else {
             return 'too many items in record' if $count++;
-            $self->type ($tag);
+            $self->datatype ($tag);
             foreach my $subchild ($child->children) { 
                 my $subtag = $subchild->tag;
                 my $subval = $subchild->child_text;
@@ -79,7 +79,7 @@ sub clear_object {
     my ($self) = @_;
     $self->meta ({});
     $self->hash ({});
-    $self->type (undef);
+    $self->datatype (undef);
     return;
 }
 
@@ -103,6 +103,7 @@ sub text {
     my ($self, %args) = @_;
     my @return;
 
+    push @return, "Data Type: " . $self->datatype;
     if (my $hash = $self->hash) { 
         push @return, "Data";
         foreach (keys %{$hash}) {
@@ -125,7 +126,7 @@ sub text {
 
 =cut
 
-sub xml  {
+sub xml_old  {
     my ($self) = @_;
     return 'not done yet';
 }

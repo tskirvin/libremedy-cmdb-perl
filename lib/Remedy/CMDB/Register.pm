@@ -27,7 +27,7 @@ our @ISA = init_struct (__PACKAGE__);
 use Remedy::CMDB::Register::XML;
 use Remedy::CMDB::Register::Remedy;
 
-use Remedy::CMDB::Item;
+use Remedy::CMDB::ItemList;
 use Remedy::CMDB::Relationship;
 
 ##############################################################################
@@ -44,7 +44,7 @@ use Remedy::CMDB::Relationship;
 
 sub fields {
     'mdrid'         => '$',
-    'items'         => '@',
+    'itemlist'      => 'Remedy::CMDB::ItemList',
     'relationships' => '@',
 }
 
@@ -55,10 +55,11 @@ Takes an XML::Twig::Elt object I<XML>
 =cut
 
 sub populate_xml {
+    warn "PX: @_\n";
     my ($self, $xml) = @_;
     return 'no xml' unless ($xml && ref $xml);
-    return 'tag type should be registerRequest' 
-        unless ($xml->tag eq 'registerRequest'); 
+    return 'invalid tag type: ' . $xml->tag
+        unless ($xml->tag eq $self->tag_type); 
 
     $self->clear_object;
     
@@ -68,15 +69,12 @@ sub populate_xml {
 
     my @items;
     if (my $itemlist = $xml->first_child ('itemList')) {
-        foreach my $item ($itemlist->children ('item')) {
-            my $obj = Remedy::CMDB::Item->read ('xml', 'source' => $item, 
-                'type' => 'object');
-            return "no object created" unless $obj;
-            return $obj unless ref $obj;
-            push @items, $obj;
-        }
+        my $obj = Remedy::CMDB::ItemList->read ('xml', 'source' => $itemlist,
+            'type' => 'object');
+        return 'no object created' unless $obj;
+        return $obj unless ref $obj;
+        $self->itemlist ($obj);
     }
-    $self->items (\@items);
 
     my @relate;
     if (my $relationshiplist = $xml->first_child ('relationshipList')) {
@@ -98,7 +96,7 @@ sub populate_remedy { "not yet implemented" }
 sub clear_object {
     my ($self) = @_;
     $self->mdrid ('');
-    $self->items ([]);
+    $self->itemlist ();
     $self->relationships ([]);
     return;
 }
@@ -109,12 +107,12 @@ sub text {
 
     push @return, "ID: " . $self->id;
     push @return, '', "Items";
-    foreach my $item (@{$self->items}) { 
-        foreach ($item->text)     { push @return, '  ' . $_ }
+    foreach my $item (@{$self->itemlist->list}) { 
+        foreach ($item->text)     { push @return, "  $_" }
     }
     push @return, '', "Relationships";
     foreach my $relation (@{$self->relationships}) { 
-        foreach ($relation->text) { push @return, '  ' . $_ }
+        foreach ($relation->text) { push @return, "  $_" }
     }
 
     wantarray ? @return : join ("\n", @return, '');
@@ -127,35 +125,11 @@ sub id {
     return $mdrid;
 }
 
+sub tag_type { 'registerRequest' }
+
 =back
 
 =cut
-
-##############################################################################
-### Internal Subroutines #####################################################
-##############################################################################
-
-sub _getatt { }
-
-sub _getdata {
-    warn "_gd: @_\n";
-    my ($self, $listname, $objname, $class) = @_;
-    return unless my $data = $self->data;
-    return unless my $item = $data->first_child ($listname);
-
-    return $item unless $objname;
-    my @children = $item->children ($objname);
-    return unless scalar @children;
-
-    my @items;
-    foreach my $i (@children) {
-        $i->print;
-        push @items, $class ? $class->new ('type' => 'xml')
-                            : $i;
-    }
-    return @items;
-}
-
 
 ##############################################################################
 ### Final Documentation ######################################################

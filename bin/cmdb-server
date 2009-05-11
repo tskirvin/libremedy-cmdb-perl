@@ -13,8 +13,8 @@
 ### Configuration ############################################################
 ##############################################################################
 
-## Modify and uncomment this to use user modules instead of system-wide 
-## ones.  You'll need this unless you're installing as root.  
+## Modify and uncomment this to use user modules instead of system-wide
+## ones.  You'll need this unless you're installing as root.
 # use lib '/FULL/PATH/TO/PERL/MODULES';
 use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-perl/lib";
 use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib";
@@ -24,10 +24,10 @@ use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib"
 our $DEBUG = 5;
 
 ## How many children should we allow running at a time?  This also works
-## out to the maximum number of processes.  
-our $KIDS_MAX = 1; 		
+## out to the maximum number of processes.
+our $KIDS_MAX = 1;
 
-## How long should it take before a connection times out?  This should be 
+## How long should it take before a connection times out?  This should be
 ## set to slightly below the lower-bound of the timeouts of any of the
 ## servers you connect to; the number is in seconds.
 our $TIMEOUT = 10;
@@ -63,7 +63,7 @@ my $result = $parser->getoptions (
 $SIG{CHLD} = \&reaper; 		   # Set what to do when the children die.
 
 our $server = Remedy::CMDB::Server->connect (
-    'debug'     => $DEBUG 
+    'debug'     => $DEBUG
 ) || $LOGGER->logdie ("Couldn't initialize the server: $@");
 
 my $logger = $server->logger_or_die;
@@ -76,50 +76,55 @@ our $CHILDREN = 0;
 while (my $client = $server->socket->accept) {
     next unless defined fileno ($client);		# Socket not open -> stop
     $count++;
-    if ($CHILDREN >= $KIDS_MAX) { 
+    if ($CHILDREN >= $KIDS_MAX) {
         print $client "too many clients connected\n";
         close $client;
         next;
     } # Only allow $KIDS_MAX servers
 
     $logger->info ("accepted connection ($client)");
-  
+
     # Fork off more clients; if we're above $KIDS_MAX, though, wait for a
     # while and try again.  (This ought to have a real timeout, I guess)
     unless (my $pid = _fork ($client)) {
         next unless defined $pid;
-        $CHILDREN++; 
+        $CHILDREN++;
         $logger->info  ("connection $count established");
         $logger->debug ("forked off client $pid: $CHILDREN\n");
         next;
     }
 
-    # $server->server_close; 	# child closes unused handle
     select ($client);
 
     # Central loop - every time there's input, do something with it.
     my $time = time;
 
-    print $client "HI THERE GO AWAY\n";
+    my @input;
     while (my $line = <$client>) { 
-        $server->process ($client, $line);
+        warn "L: $line\n";
+        last if ($line =~ /^<\/xml>$/);
+        push @input, $line;
     }
+    warn "I: @input\n";
+    my @return = $server->process (@input);
+    #while (my $line = <$client>) {
+        #$server->process ($client, $line);
+    #}
     close $client;
-    
     select (\*STDOUT);
-    $server->process ($client, 'quit');
+
     exit 0;
 
-#    while (<$client>) {		
-#        if (time - $TIMEOUT > $time) { 
+#    while (<$client>) {
+#        if (time - $TIMEOUT > $time) {
 #            $logger->debug ("connection timed out");
 #            last;
-#        } else { 
-#            $time = time 
+#        } else {
+#            $time = time
 #        }
-#        chomp;  
+#        chomp;
 #        print $_;
-#        next unless (defined ($_) && $_ =~ /\S/);   
+#        next unless (defined ($_) && $_ =~ /\S/);
 #        last unless defined fileno ($client);	# Socket not open -> stop
 #        $server->process ($client, $_) || last;
 #    }
@@ -129,7 +134,7 @@ while (my $client = $server->socket->accept) {
     select (\*STDOUT);
 }
 
-$server->server_close;
+#$server->server_close;
 exit 0;
 
 ###############################################################################
@@ -137,10 +142,9 @@ exit 0;
 ###############################################################################
 
 ### _fork ( FILEHANDLE )
-# Just the fork code.  
+# Just the fork code.
 sub _fork {
-    warn "_fork: @_\n";
-    my ($fh) = @_;  
+    my ($fh) = @_;
     return unless $fh && defined fileno ($fh);
     if (my $pid = fork) {    # Success, and we're the parent:
         close $fh;           #   close the fh, return 0, wait for next call
@@ -148,7 +152,7 @@ sub _fork {
     } elsif (defined $pid) { # Success, and we're a child:
         return 1;            #   return something, so we can keep going
     } elsif ($! == EAGAIN) { # Retry - this is the "do again" thing
-        sleep 5;
+        sleep 3;
         return _fork ($fh);
     } else {
         die "Cannot fork: $!\n";
@@ -156,20 +160,20 @@ sub _fork {
     }
 }
 
-### reaper (PID) 
-# Takes care of cleaning up the children processes. 
-sub reaper { 
+### reaper (PID)
+# Takes care of cleaning up the children processes.
+sub reaper {
     my $kid = waitpid (-1, WNOHANG);
     if ($kid == -1) { 		    # no child waiting; ignore
     } elsif (WIFEXITED ($?)) {	# process exited
         $CHILDREN--;
         $LOGGER->debug ("Client reaped, $CHILDREN remain");
         reaper ();			# Make sure there's no more left
-    } else { 
+    } else {
         return                  # False alarm; ignore
     }
 }
-    
+
 
 ##############################################################################
 ### Documentation ############################################################
@@ -177,7 +181,7 @@ sub reaper {
 
 =head1 NAME
 
-cmdb-server - 
+cmdb-server -
 
 =head1 SYNOPSIS
 

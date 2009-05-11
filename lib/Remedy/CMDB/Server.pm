@@ -145,9 +145,8 @@ sub disconnect {
 }
 
 sub process {
-    my ($self, $fh, $line) = @_;
-    print "$line\n";
-    return;
+    my ($self, @xml) = @_;
+    return @xml;
 }
 
 # eventually, we'll keep the logger in the object, but not yet
@@ -169,7 +168,6 @@ sub logger_or_die {
 sub quit {
     my ($self, $fh) = @_;
     return unless ($fh && defined fileno ($fh));
-    print $fh "Goodbye" . $NEWLINE;
     return close $fh;
 }
 
@@ -191,10 +189,10 @@ sub register {
 ### Internal Subroutines #####################################################
 ##############################################################################
 
-sub DESTROY { 
-    my ($self) = @_;
-    $self->server_close if $self->socket;
-}
+#sub DESTROY { 
+#    my ($self) = @_;
+#    $self->server_close if $self->socket;
+#}
 
 ##############################################################################
 ### Final Documentation ######################################################

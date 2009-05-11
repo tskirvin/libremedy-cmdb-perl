@@ -97,48 +97,22 @@ sub populate_xml {
 
 =cut
 
-sub text {
+sub tag_type { 'item' }
+
+sub text_old {
     my ($self, %args) = @_;
     my @return;
     push @return, "ID: " . $self->instanceid->text;
     foreach my $record ($self->record) { 
-        foreach ($record->text) { push @return, '  ' . $_; }
+        foreach ($record->text) { push @return, $_; }
+        push @return, '';
     }
     return wantarray ? @return : join ("\n", @return, '');
 }
 
-=item xml ()
-
-=cut
-
-sub xml {
-    my ($self, %args) = @_;
-}
-
 =back
 
 =cut
-
-##############################################################################
-### Stubs ####################################################################
-##############################################################################
-
-=head2 Stubs
-
-These functions are stubs; the real work is implemented by the sub-functions.
-
-=over 4
-
-=item source
-
-=item target
-
-=back
-
-=cut
-
-sub source { "Not implemented" }
-sub target { "Not implemented" }
 
 ##############################################################################
 ### Final Documentation ######################################################

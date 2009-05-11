@@ -13,8 +13,8 @@
 ### Configuration ############################################################
 ##############################################################################
 
-## Modify and uncomment this to use user modules instead of system-wide 
-## ones.  You'll need this unless you're installing as root.  
+## Modify and uncomment this to use user modules instead of system-wide
+## ones.  You'll need this unless you're installing as root.
 # use lib '/FULL/PATH/TO/PERL/MODULES';
 use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-perl/lib";
 use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib";
@@ -32,6 +32,8 @@ use warnings;
 
 use Getopt::Long;
 use Remedy::CMDB::Client;
+use XML::Twig;
+use XML::Writer;
 
 $0 =~ s%.*/%%g;     # Lose the annoying path information
 $|++;               # Flush output
@@ -46,18 +48,61 @@ my $result = $parser->getoptions (
     'man'           => sub { pod2usage (-verbose => 2, -noperldoc => 1) },
     'h|help'        => sub { pod2usage (-verbose => 1) }) || _error_usage ();
 
-my $client = Remedy::CMDB::Client->connect ('DEBUG' => $DEBUG) 
+my @input = <STDIN>;
+
+# just make sure the XML is good
+my $twig = XML::Twig->new;
+$twig->safe_parse (join ('', @input)) || error ('bad XML on input');
+
+my $client = Remedy::CMDB::Client->connect ('DEBUG' => $DEBUG)
     or die "couldn't connect to CMDB: $@\n";
 
 my $socket = $client->socket;
-# while (<$socket>) { print }
-print $socket "REGISTER\n";
-while (<>) { print $socket $_ }
-print $socket ".\n";
-while (<$socket>) { print }
+
+my $string;
+
+my $writer = XML::Writer->new ('OUTPUT' => \$string, 'DATA_INDENT' => 4,
+    'NEWLINES' => 0, 'DATA_MODE' => 1, 'UNSAFE' => 1);
+$writer->startTag ('cmdb-client');
+
+$writer->startTag ('environment');
+foreach my $key (sort keys %ENV) {
+    $writer->dataElement ($key, $ENV{$key});
+}
+$writer->endTag;
+
+$writer->startTag ('request');
+$writer->raw ($twig->sprint ('pretty_print' => 'indented_a'));
+$writer->endTag;
+
+$writer->endTag;
+$writer->end;
+
+print $socket $string;
+# get something from the socket, and print that
+
 $socket->close;
 
 exit 0;
+
+##############################################################################
+### Subroutines ##############################################################
+##############################################################################
+
+sub error {
+    my ($text) = @_;
+    my $error;
+    my $writer = XML::Writer->new ('OUTPUT' => \$error, 'DATA_INDENT' => 4,
+        'NEWLINES' => 0, 'DATA_MODE' => 1);
+    $writer->startTag ('cmdb-error');
+    $writer->dataElement ('text', $text);
+    $writer->endTag;
+    $writer->end;
+
+    print $error;
+    
+    exit 1;
+}
 
 ###############################################################################
 ### Documentation #############################################################

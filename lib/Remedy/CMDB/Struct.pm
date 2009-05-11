@@ -139,9 +139,89 @@ sub read_remedy { }
 sub populate_remedy { "not configured" }
 sub populate_xml    { "not configured" }
 
+sub tag_type { 'not configured' }
+
 ## subroutines we'll want later, if just to override
-sub text    {}
-sub xml     {}
+sub text    {
+    my ($self, @args) = @_;
+    my @return;
+    
+    push @return, $self->tag_type;
+
+    my %fields = $self->fields;
+    foreach my $field (sort keys %fields) {
+        my $data = $self->$field;
+        my $type = $fields{$field};
+        # push @return, "  $field";
+
+        if ($type eq '@') {
+            push @return, "  $field";
+            foreach my $key (@$data) { 
+                if (ref $key) { 
+                    foreach ($key->text) { push @return, "    $_" }
+                } else { 
+                    push @return, "    $_";
+                }
+            }
+
+        } elsif ($type eq '%') { 
+            push @return, "  $field";
+            foreach my $key (keys %{$data}) { 
+                push @return, "    $key: $$data{$key}";
+            }
+
+        } else {
+            if (ref $data) { 
+                push @return, "  $field";
+                foreach ($data->text) { push @return, "    $_" }
+            } else { 
+                push @return, "  $field: $_";
+            }
+        }
+    }
+    return wantarray ? @return : join ("\n", @return, '');
+}
+
+sub xml     {
+    my ($self, @args) = @_;
+
+    my $string;
+    my $writer = XML::Writer->new ('OUTPUT' => \$string, 'DATA_INDENT' => 4,
+        'NEWLINES' => 0, 'DATA_MODE' => 1, 'UNSAFE' => 1, @args);
+
+    $writer->startTag ($self->tag_type);
+
+    my %fields = $self->fields;
+    foreach my $field (sort keys %fields) {
+        my $data = $self->$field;
+        my $type = $fields{$field};
+
+        if ($type eq '@') {
+            foreach my $key (@$data) { 
+                if (ref $key) { $writer->raw ($key->xml)            } 
+                else          { $writer->dataElement ($field, $key) }
+            }
+
+        } elsif ($type eq '%') { 
+            foreach my $key (keys %{$data}) { 
+                $writer->dataElement ($key, $$data{$key});
+            }
+
+        } else {
+            if (ref $data) {
+                $writer->raw ($data->xml);
+            } else { 
+                $writer->dataElement ($field, $data);
+            }
+        }
+    }
+
+    $writer->endTag;
+    $writer->end;
+
+    return $string;
+}
+
 sub db_save {}
 sub db_load {}
 

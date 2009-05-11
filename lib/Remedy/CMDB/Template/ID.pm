@@ -51,6 +51,19 @@ sub fields {
     'localid' => '$',
 }
 
+sub populate {
+    my ($self, $mdrid, $localid) = @_;
+    $self->mdrid   ($mdrid);
+    $self->localid ($localid);
+    return;
+}
+
+sub match_mdr {
+    my ($self, $id) = @_;
+    return 'mdr does not match' unless $id->mdrid eq $self->mdrid;
+    return;
+}
+
 =item populate_xml (XML)
 
 =cut
@@ -114,21 +127,6 @@ sub id {
 =cut
 
 sub text { return shift->id }
-
-=item xml ()
-
-=cut
-
-sub xml  {
-    my ($self) = @_;
-    my $string;
-    my $xml = XML::Writer->new ('OUTPUT' => \$string, 'DATA_INDENT' => 4,
-        'NEWLINES' => 0, 'DATA_MODE' => 1);
-    $xml->dataElement ('mdrId', $self->mdrid);
-    $xml->dataElement ('localId', $self->localid);
-
-    return $xml;
-}
 
 =back
 

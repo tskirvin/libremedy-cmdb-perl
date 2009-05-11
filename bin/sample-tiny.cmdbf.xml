@@ -10,16 +10,7 @@
           <serialNumber>2341234</serialNumber>
         </computerSystem>
         <recordMetadata>
-          <recordId>1</recordId>
-        </recordMetadata>
-      </record>
-      <record>
-        <!-- softwareserver = BMC_SoftwareServer -->
-        <softwareServer>
-          <softwareServerType>SMTP</softwareServerType>
-        </softwareServer>
-        <recordMetadata>
-          <recordId>2</recordId>
+          <recordId></recordId>
         </recordMetadata>
       </record>
       <instanceId>
@@ -36,16 +27,7 @@
           <serialNumber>2451342</serialNumber>
         </computerSystem>
         <recordMetadata>
-          <recordId>1</recordId>
-        </recordMetadata>
-      </record>
-      <record>
-        <!-- softwareserver = BMC_SoftwareServer -->
-        <softwareServer>
-          <softwareServerType>SMTP</softwareServerType>
-        </softwareServer>
-        <recordMetadata>
-          <recordId>2</recordId>
+          <recordId></recordId>
         </recordMetadata>
       </record>
       <instanceId>
@@ -62,7 +44,7 @@
           <serialNumber>2342</serialNumber>
         </computerSystem>
         <recordMetadata>
-          <recordId>1</recordId>
+          <recordId></recordId>
         </recordMetadata>
       </record>
       <instanceId>
@@ -79,7 +61,7 @@
           <serialNumber>2342</serialNumber>
         </computerSystem>
         <recordMetadata>
-          <recordId>1</recordId>
+          <recordId></recordId>
         </recordMetadata>
       </record>
       <instanceId>

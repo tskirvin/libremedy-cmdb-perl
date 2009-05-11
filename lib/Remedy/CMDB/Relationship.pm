@@ -84,6 +84,8 @@ sub populate_xml {
 
 =cut
 
+sub tag_type { 'relationship' }
+
 sub text {
     my ($self, %args) = @_;
     my @return;
@@ -97,13 +99,7 @@ sub text {
     return wantarray ? @return : join ("\n", @return, '');
 }
 
-=item xml ()
-
 =cut
-
-sub xml {
-    my ($self, %args) = @_;
-}
 
 =back
 
