@@ -1,3 +1,0 @@
-dependency          BMC.CORE:BMC_Dependency
-computerSystem      BMC.CORE:BMC_ComputerSystem
-softwareServer      BMC.CORE:BMC_SoftwareServer

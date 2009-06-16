@@ -1,0 +1,137 @@
+#!/usr/bin/perl
+
+##############################################################################
+### Configuration ############################################################
+##############################################################################
+
+use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-perl/lib";
+use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib";
+
+##############################################################################
+### Declarations #############################################################
+##############################################################################
+
+use strict;
+
+use Getopt::Long;
+use Remedy::CMDB;
+use Remedy::CMDB::Register;
+use Remedy::CMDB::RegisterResponse;
+
+$|++;
+
+##############################################################################
+### main () ##################################################################
+##############################################################################
+
+my ($file, @rest) = @ARGV;
+die "no file name\n" unless ($file);
+
+my $response = Remedy::CMDB::RegisterResponse->new ();
+
+my $cmdb = eval { Remedy::CMDB->connect () }
+    or die "couldn't create CMDB object: $@\n";
+my $logger = $cmdb->logger_or_die;
+
+my $register = Remedy::CMDB::Register->read ('xml', 'type' => 'file', 
+    'source' => $file);
+    # do a lot here - probably e
+
+my $mdr_parent = $register->mdrid;
+$logger->debug ("mdr_parent is $mdr_parent");
+if (! $mdr_parent) {
+    $response->add_error ('global', 'no mdrId offered');
+    exit_response ($response, 'FATAL' => 1);
+} 
+
+my $dataset = $cmdb->mdr_to_dataset ($mdr_parent);
+
+if (! $dataset) {
+    $response->add_error ('global', "no dataset mapping for $mdr_parent");
+    exit_response ($response, 'FATAL' => 1);
+}
+
+# TODO: look at the kerberos principal, ye mighty, and despair
+
+my (@errors) = @_;
+
+my $count = 0;
+foreach my $item ($register->items) { 
+    $count++;
+    my $error = register_item ($cmdb, $item, 'response' => $response, 
+        'dataset' => $dataset, 'mdr_parent' => $mdr_parent);
+    if ($error) { 
+        $response->add_error ($count, $error);
+    } else {
+    }
+}
+
+# then relationships w/register_relationship
+
+exit_response ($response);
+
+##############################################################################
+### Subroutines ##############################################################
+##############################################################################
+
+=item register_item (ITEM, ARGHASH)
+
+=over 4
+
+=item mdr_parent 
+
+=item response 
+
+=back
+
+=cut
+
+sub register_item {
+    my ($cmdb, $item, %args) = @_;
+    my $resp = $args{'response'};   # TODO: give it a default
+
+    my $localid  = $item->localid  or return 'no localId';
+    my $datatype = $item->datatype or return 'no datatype';
+    my $mdrid    = $item->mdrid    or return 'no mdrId';
+
+    if (my $mdr_parent = $args{'mdr_parent'}) { 
+        return 'mdrId does not match parent mdrId' unless $mdrid eq $mdr_parent;
+    }
+
+    my $class = $cmdb->translate_class ($datatype) 
+        or return "invalid class: $datatype";
+    
+    my $obj;
+    if (my $data = $item->data) {
+        my $name = $data->{'Name'};
+
+        my %search = (
+            'DatasetId' => $dataset,
+            'Name'      => $name
+        );
+
+        if (my $obj = $cmdb->read ($class, %search)) { 
+        
+        } else { 
+            $obj = $cmdb->create ($class);
+            warn "O: $obj\n";
+            $obj->set ('DatasetId' => $mdrid, 'Name' => $name);
+        }
+
+        foreach (keys %{$data}) { $obj->set ($_, $$data{$_}); }
+        # $obj->save;
+    } else {
+        # no data?  what do you expect them to do with it?
+    }
+}
+
+sub register_relationship {
+    my ($cmdb, $relationship, %args) = @_;
+
+}
+
+sub exit_response {
+    my ($response, %args) = @_;
+    print scalar $response->xml;
+    exit $args{'FATAL'} ? 1 : 0;
+}
