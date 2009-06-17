@@ -43,7 +43,7 @@ use Remedy::CMDB::Relationship;
 =cut
 
 sub fields {
-    'mdrid'         => '$',
+    'mdrId'         => '$',
     'itemlist'      => 'Remedy::CMDB::ItemList',
     'relationships' => '@',
 }
@@ -65,7 +65,7 @@ sub populate_xml {
     
     my $mdr = $xml->first_child_text ('mdrId') || '';
     return 'no mdrId' unless $mdr;
-    $self->mdrid ($mdr);
+    $self->mdrId ($mdr);
 
     my @items;
     if (my $itemlist = $xml->first_child ('itemList')) {
@@ -95,7 +95,7 @@ sub populate_remedy { "not yet implemented" }
 
 sub clear_object {
     my ($self) = @_;
-    $self->mdrid ('');
+    $self->mdrId ('');
     $self->itemlist ();
     $self->relationships ([]);
     return;
@@ -118,11 +118,25 @@ sub text {
     wantarray ? @return : join ("\n", @return, '');
 }
 
+sub items {
+    my ($self) = @_;
+    return unless my $itemlist = $self->itemlist;
+    return unless my $list = $itemlist->list;
+    return unless ref $list && scalar @$list;
+    return @$list;
+}
+
+sub relationships {
+    my ($self) = @_;
+    
+    return [];
+}
+
 sub id {
     my ($self) = @_;
-    my $mdrid = $self->mdrid || return;
+    my $mdrId = $self->mdrId || return;
     # this is wrong but will do for now
-    return $mdrid;
+    return $mdrId;
 }
 
 sub tag_type { 'registerRequest' }

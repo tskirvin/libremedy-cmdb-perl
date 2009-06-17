@@ -81,6 +81,22 @@ Matches the B<config> accessor.
 our $CONFIG        = '/etc/remedy/cmdb/config';
 $FUNCTIONS{'config'} = \$CONFIG;
 
+=item $CLASSES
+
+Matches the B<classes_file> accessor.
+
+=cut
+
+our $CLASSES       = '/etc/remedy/cmdb/classes.csv';
+$FUNCTIONS{'classes_file'} = \$CLASSES;
+
+=item $SOURCES
+
+=cut
+
+our $SOURCES       = '/etc/remedy/cmdb/sources.csv';
+$FUNCTIONS{'sources_file'} = \$SOURCES;
+
 =item $REMEDY_CONFIG
 
 =cut
@@ -136,13 +152,17 @@ use warnings;
 
 use Class::Struct;
 
+use Remedy::CMDB::Classes;
 use Remedy::CMDB::Log;
+use Remedy::CMDB::Sources;
 
 my %opts;
 foreach (keys %FUNCTIONS) { $opts{$_} = '$' }
 
 struct 'Remedy::CMDB::Config' => { 
-    'log' => 'Remedy::CMDB::Log',
+    'log'     => 'Remedy::CMDB::Log',
+    'sources' => 'Remedy::CMDB::Sources',
+    'classes' => 'Remedy::CMDB::Classes',
     %opts, 
 };
 
@@ -197,11 +217,54 @@ sub load {
         'level_file' => $self->loglevel_file,
     );
     $log->init;
-
     $self->log ($log);
+
+    $self->sources_read ($self->sources_file);
+    $self->classes_read ($self->classes_file);
 
     return $self;
 }
+
+sub sources_read {
+    my ($self, $file) = @_;
+    my $logger = $self->log->logger;
+
+    $logger->debug ("loading sources from $file");
+    my $sources = eval { Remedy::CMDB::Sources->read ($file) }
+        or $logger->logdie ("couldn't read sources file: $@");
+
+    $self->sources ($sources);
+    $self->sources_file ($file);
+
+    return $sources;
+}
+
+sub classes_read {
+    my ($self, $file) = @_;
+    my $logger = $self->log->logger;
+
+    $logger->debug ("loading classes from $file");
+    my $sources = eval { Remedy::CMDB::Classes->read ($file) }
+        or $logger->logdie ("couldn't read classes file: $@");
+
+    $self->classes ($sources);
+    $self->classes_file ($file);
+
+    return $sources;
+}
+
+sub mdr_to_dataset {
+    my ($self, $mdr) = @_;
+    return $self->sources->datasource ($mdr);
+}
+
+sub class_human_to_remedy {
+    my ($self, $class) = @_;
+    return $self->classes->human_to_remedy ($class);
+}
+
+
+
 
 =item debug ()
 

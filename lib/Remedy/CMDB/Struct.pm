@@ -4,7 +4,7 @@ our $VERSION = "0.01.01";
 
 =head1 NAME
 
-Remedy::CMDB::Struct - 
+Remedy::CMDB::Struct -
 
 =head1 SYNOPSIS
 
@@ -16,7 +16,7 @@ Remedy::CMDB::Struct -
 ### Configuration ############################################################
 ##############################################################################
 
-our $DEBUG = 0;      
+our $DEBUG = 0;
 
 our $LOGGER = Remedy::Log->get_logger ();
 
@@ -53,7 +53,7 @@ sub init_struct {
     my ($class, %extra) = @_;
     $LOGGER->all ("initializing structure for '$class'");
     our $new = $class . "::Struct";
-    
+
     my %fields = $class->fields;
     struct $new => {
         'type'      => '$',
@@ -77,14 +77,14 @@ sub read {
     $self = $self->new unless (ref $self);
 
     my $obj;
-    if    (lc $source eq 'xml')    { $obj = $self->read_xml    (%opts)  } 
+    if    (lc $source eq 'xml')    { $obj = $self->read_xml    (%opts)  }
     elsif (lc $source eq 'remedy') { $obj = $self->read_remedy (%opts)  }
     else                           { return "invalid source: '$source'" }
 
-    if (! ref $obj) { 
+    if (! ref $obj) {
         my $error = $obj || "unknown error";
         die "$error\n";
-    } 
+    }
     return $obj;
 }
 
@@ -103,7 +103,7 @@ sub read {
 sub read_xml {
     my ($self, %opts) = @_;
     my $class = ref $self;
-    
+
     my $type   = $opts{'type'}   || return "no valid type";
     my $source = $opts{'source'} || return "no valid source";
 
@@ -122,15 +122,15 @@ sub read_xml {
         return "invalid type: '$type'";
     }
 
-    if (my $error = $self->populate_xml ($data)) { 
-        $LOGGER->error ("$class: couldn't populate from XML: $error");   
+    if (my $error = $self->populate_xml ($data)) {
+        $LOGGER->error ("$class: couldn't populate from XML: $error");
         return;
     }
 
     $self->type ('xml');
     $self->data ($data);
     $LOGGER->info ('created type ' . $data->tag);
-    
+
     return $self;
 }
 
@@ -145,7 +145,7 @@ sub tag_type { 'not configured' }
 sub text    {
     my ($self, @args) = @_;
     my @return;
-    
+
     push @return, $self->tag_type;
 
     my %fields = $self->fields;
@@ -156,25 +156,25 @@ sub text    {
 
         if ($type eq '@') {
             push @return, "  $field";
-            foreach my $key (@$data) { 
-                if (ref $key) { 
+            foreach my $key (@$data) {
+                if (ref $key) {
                     foreach ($key->text) { push @return, "    $_" }
-                } else { 
+                } else {
                     push @return, "    $_";
                 }
             }
 
-        } elsif ($type eq '%') { 
+        } elsif ($type eq '%') {
             push @return, "  $field";
-            foreach my $key (keys %{$data}) { 
+            foreach my $key (keys %{$data}) {
                 push @return, "    $key: $$data{$key}";
             }
 
         } else {
-            if (ref $data) { 
+            if (ref $data) {
                 push @return, "  $field";
                 foreach ($data->text) { push @return, "    $_" }
-            } else { 
+            } else {
                 push @return, "  $field: $_";
             }
         }
@@ -198,21 +198,15 @@ sub xml     {
 
         if ($type eq '@') {
             foreach my $key (@$data) { 
-                if (ref $key) { $writer->raw ($key->xml)            } 
-                else          { $writer->dataElement ($field, $key) }
+                $writer->write_elem_or_raw ($field, $key); 
             }
-
-        } elsif ($type eq '%') { 
-            foreach my $key (keys %{$data}) { 
+        } elsif ($type eq '%') {
+            foreach my $key (keys %{$data}) {
                 $writer->dataElement ($key, $$data{$key});
             }
 
         } else {
-            if (ref $data) {
-                $writer->raw ($data->xml);
-            } else { 
-                $writer->dataElement ($field, $data);
-            }
+            $writer->write_elem_or_raw ($field, $data);
         }
     }
 
@@ -232,6 +226,63 @@ sub db_load {}
 ##############################################################################
 ### Internal Subroutines #####################################################
 ##############################################################################
+
+##############################################################################
+### XML::Writer Subroutines ##################################################
+##############################################################################
+
+package XML::Writer;
+
+=head2 XML::Writer Subroutines 
+
+This package adds a couple of sub-routines to XML::Writer to best handle the
+recursive nature of the 
+
+=over 4
+
+=item write_elem_or_raw (FIELD, DATA)
+
+Writes additional fields to the XML document. If I<DATA> is a reference, then
+we assume that it is an additional B<Remedy::CMDB::Struct> object, and pull the 
+text out with B<xml ()> and run that through B<write_raw_with_format ()>.
+Otherwise, we'll just add a dataElement with the field name I<FIELD>.
+
+=cut
+
+sub write_elem_or_raw {
+    my ($self, $field, $data) = @_;
+    if (ref $data) { $self->write_raw_with_format ($data->xml) }
+    else           { $self->dataElement ($field, $data)         }
+}
+
+=item write_raw_with_format (TEXT)
+
+Adds I<TEXT> to the XML document in a formatted manner - that is, it adds
+appropriate indentation and newlines to make it fit in visually to the whole
+document.
+
+Not quite perfect yet; there are still a few too many newlines added in, and
+the only local option we're looking at it DATA_INDENT.  But it's a good start.
+
+=cut
+
+sub write_raw_with_format {
+    my ($self, $xml) = @_;
+    my $indent = " " x $self->getDataIndent;
+    $self->raw ("\n");
+    foreach my $line (split ("\n", $xml)) {
+        if ($line =~ /^\s*$/) { 
+            $self->raw ($line);
+        } else { 
+            my $text = join ('', $indent, $line, "\n");
+            $self->raw ($text);
+        } 
+    }
+}
+
+=back
+
+=cut
 
 ##############################################################################
 ### Final Documentation ######################################################

@@ -69,19 +69,22 @@ sub connect {
     ## From now on, we can print debugging messages when necessary
     my $logger = $self->logger_or_die ('no logger at init');
 
-    ## Create and save the Remedy object
-    $logger->debug ("creating remedy object");
-    { 
-        local $@;
-        my $remedy = eval { Remedy->connect ('config' => $conf->remedy_config) }
-            or $logger->logdie ("couldn't start Remedy session: $@");
-        $self->remedy ($remedy);
-    }
+    my $remedy = eval { Remedy->connect ('config' => $conf->remedy_config) }
+        or $logger->logdie ("couldn't connect to database: $@");
+    $logger->logdie ($@) if $@;
+
+    $self->remedy ($remedy);
+    $remedy->logobj ($self->logobj);        
 
     return $self;
 }
 
+sub create { shift->remedy_or_die->create (@_) }
+sub read   { shift->remedy_or_die->read (@_) }
+
 sub logger { shift->logobj_or_die->logger (@_) }
+
+sub translate_class { shift->config_or_die->class_human_to_remedy (@_) }
 
 sub config_or_die { shift->_or_die ('config', "no configuration", @_) }
 sub logobj_or_die { shift->_or_die ('logobj', "no logger",        @_) }

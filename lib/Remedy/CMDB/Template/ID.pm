@@ -38,29 +38,29 @@ All items
 
 =over 4
 
-=item mdrid ($)
+=item mdrId ($)
 
-=item localid ($)
+=item localId ($)
 
 =back
 
 =cut
 
 sub fields {
-    'mdrid'   => '$',
-    'localid' => '$',
+    'mdrId'   => '$',
+    'localId' => '$',
 }
 
 sub populate {
-    my ($self, $mdrid, $localid) = @_;
-    $self->mdrid   ($mdrid);
-    $self->localid ($localid);
+    my ($self, $mdrId, $localId) = @_;
+    $self->mdrId   ($mdrId);
+    $self->localId ($localId);
     return;
 }
 
 sub match_mdr {
     my ($self, $id) = @_;
-    return 'mdr does not match' unless $id->mdrid eq $self->mdrid;
+    return 'mdr does not match' unless $id->mdrId eq $self->mdrId;
     return;
 }
 
@@ -79,11 +79,11 @@ sub populate_xml {
 
     my $mdr = $xml->first_child_text ('mdrId') || '';
     return 'no mdrId' unless $mdr;
-    $self->mdrid ($mdr);
+    $self->mdrId ($mdr);
 
     my $local = $xml->first_child_text ('localId') || '';
     return 'no localId' unless $local;
-    $self->localid ($local);
+    $self->localId ($local);
 
     return;
 }
@@ -94,8 +94,8 @@ sub populate_xml {
 
 sub clear_object {
     my ($self) = @_;
-    $self->mdrid   (undef);
-    $self->localid (undef);
+    $self->mdrId   (undef);
+    $self->localId (undef);
     return;
 }
 
@@ -113,13 +113,13 @@ sub clear_object {
 
 =item id ()
 
-Creates a "canonical" ID by joining the localid and the mdrid.
+Creates a "canonical" ID by joining the localId and the mdrId.
 
 =cut
 
 sub id {
     my ($self) = @_;
-    return join ('@', $self->localid, $self->mdrid);
+    return join ('@', $self->localId, $self->mdrId);
 }
 
 =item text ()
@@ -172,8 +172,5 @@ This program is free software; you may redistribute it and/or modify
 it under the same terms as Perl itself.
 
 =cut
-
-1;
-
 
 1;

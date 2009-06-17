@@ -37,8 +37,10 @@ our @ISA = init_struct (__PACKAGE__);
 =cut
 
 sub fields {
-    'instanceid'  => 'Remedy::CMDB::Item::InstanceID',
-    'text'        => '$',
+    # 'instanceid'  => 'Remedy::CMDB::Item::InstanceID',
+    'instanceid'  => '$',
+    'string'      => '$',
+    'type'        => '$',
     'alternateid' => '@',
 }
 
@@ -58,7 +60,7 @@ sub populate_xml {
     if (my $declined = $xml->first_child ('declined')) {
         my @reasons;
         foreach ($declined->children ('reason')) {
-            push @reasons, $_->text;
+            push @reasons, $_->string;
         }
         $self->reason (@reasons);
     }
@@ -98,35 +100,76 @@ sub populate_xml {
     return;
 }
 
+sub xml {
+    my ($self, @args) = @_;
+
+    my $string;
+    my $writer = XML::Writer->new ('OUTPUT' => \$string, 'DATA_INDENT' => 4,
+        'NEWLINES' => 0, 'DATA_MODE' => 1, 'UNSAFE' => 1, @args);
+
+    $writer->startTag ($self->tag_type);
+    
+    my $id = $self->instanceid;
+    $writer->write_elem_or_raw ('instanceId', $id);
+
+    my $type = lc $self->type;
+    if ($type eq 'accepted') { 
+        $writer->startTag ('accepted');
+        $writer->endTag;
+    } elsif ($type eq 'declined') {
+        $writer->startTag ('declined');
+        $writer->dataElement ('reason', $self->string);
+        $writer->endTag;
+    } elsif ($type eq 'error') { 
+        $writer->startTag ('declined');
+        $writer->dataElement ('reason', "ERROR: " . $self->string);
+        $writer->endTag;
+    } else {
+        $writer->startTag ('declined');
+        $writer->dataElement ('reason', "ERROR: invalid response type ($type)");
+        $writer->endTag;
+    }
+
+    $writer->endTag;
+    $writer->end;
+    
+    return $string;
+}
+
 sub populate {
     my ($self, %args) = @_;
-    return 'no id' unless my $id = $args{'id'};
-    if (!ref $id && lc $id eq 'global') { 
-        my $new = Remedy::CMDB::Item::InstanceID->new ();
-        $new->mdrid ('GLOBAL');
-        $new->localid ();
-        $id = $new;        
-    }
+    return 'no item' unless my $item = $args{'item'};
+
+    my $id = ref $item ? $item->instanceid 
+                       : 'GLOBAL';
+    $self->instanceid ($id);
+
     my $type = $args{'type'} || 'default';
-    if    ($type eq 'approved') { return $self->populate_approved (%args) }
+    if    ($type eq 'accepted') { return $self->populate_accepted (%args) }
     elsif ($type eq 'declined') { return $self->populate_declined (%args) }
     elsif ($type eq 'error')    { return $self->populate_error    (%args) }
     else                        { return "invalid type: $type" }
 }
 
-sub populate_declined {
-    my ($self, %args) = @_; 
-    $self->text ($args{'text'});
+sub populate_accepted {
+    my ($self, %args) = @_;
+    $self->type ('accepted');
+    # this is wrong - should populate a list of alternateInstanceIds
+    $self->string ($args{'string'});
     return;
 }
 
-sub populate_success {
-    my ($self, %args) = @_;
+sub populate_declined {
+    my ($self, %args) = @_; 
+    $self->type ('declined');
+    $self->string ($args{'string'});
     return;
 }
 
 sub populate_error { 
     my ($self, %args) = @_;
+    $self->type ('declined');
+    $self->string ($args{'string'});
     return;
 }
 
@@ -134,7 +177,7 @@ sub clear_object {
     my ($self) = @_;
     $self->alternateid ([]);
     $self->instanceid  (undef);
-    $self->text        (undef);
+    $self->string      (undef);
     return;
 }
 
@@ -143,15 +186,6 @@ sub clear_object {
 ##############################################################################
 
 sub tag_type { 'instanceResponse' }
-
-sub text {
-    my ($self) = @_;
-    my @return;
-
-    # [...]
-
-    wantarray ? @return : join ("\n", @return, '');
-}
 
 =back
 

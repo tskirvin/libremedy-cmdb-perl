@@ -8,6 +8,6 @@ Standards-Version: 3.7.2
 
 Package: libremedy-ticket-perl
 Architecture: all
-Depends: libremedy-perl
+Depends: libremedy-perl, libtext-csv-perl
 Description: Remedy CMDB Interface
  CMDB interface scripts and tools

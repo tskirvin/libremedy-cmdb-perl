@@ -37,7 +37,7 @@ our @ISA = init_struct (__PACKAGE__);
 sub fields {
     'meta' => '%',
     'datatype' => '$',
-    'hash' => '%',
+    'data' => '%',
 }
 
 =item populate_xml (XML)
@@ -66,7 +66,7 @@ sub populate_xml {
             foreach my $subchild ($child->children) { 
                 my $subtag = $subchild->tag;
                 my $subval = $subchild->child_text;
-                $self->hash ($subtag, $subval);
+                $self->data ($subtag, $subval);
             }
         }
     }
@@ -78,7 +78,7 @@ sub populate_xml {
 sub clear_object {
     my ($self) = @_;
     $self->meta ({});
-    $self->hash ({});
+    $self->data ({});
     $self->datatype (undef);
     return;
 }
@@ -104,10 +104,10 @@ sub text {
     my @return;
 
     push @return, "Data Type: " . $self->datatype;
-    if (my $hash = $self->hash) { 
+    if (my $data = $self->data) { 
         push @return, "Data";
-        foreach (keys %{$hash}) {
-            push @return, "  $_: $$hash{$_}";
+        foreach (keys %{$data}) {
+            push @return, "  $_: $$data{$_}";
         }
     }
 

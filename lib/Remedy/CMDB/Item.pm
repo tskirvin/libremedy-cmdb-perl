@@ -38,13 +38,15 @@ our @ISA = init_struct (__PACKAGE__);
 =cut
 
 sub id      { shift->instanceid->id }
-sub localid { shift->instanceid->localid }
-sub mdrid   { shift->instanceid->mdrid   }
+sub localId { shift->instanceid->localId }
+sub mdrId   { shift->instanceid->mdrId   }
 
 sub fields {
     'instanceid' => 'Remedy::CMDB::Item::InstanceID',
     'record'     => '$',
 }
+
+sub datatype { shift->record->datatype }
 
 sub populate_xml {
     my ($self, $xml) = @_;

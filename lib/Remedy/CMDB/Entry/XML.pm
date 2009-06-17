@@ -46,7 +46,7 @@ sub new  {
     return $self;
 }
 
-sub mdrid { shift->_firstitem ('mdrId') }
+sub mdrId { shift->_firstitem ('mdrId') }
 
 # record, instanceId
 sub items {}

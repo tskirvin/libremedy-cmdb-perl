@@ -38,9 +38,9 @@ All items
 
 =over 4
 
-=item mdrid ($)
+=item mdrId ($)
 
-=item localid ($)
+=item localId ($)
 
 =back
 

@@ -39,7 +39,7 @@ use Remedy::CMDB::InstanceResponse;
 =cut
 
 sub fields {
-    'instance'      => '@',
+    'instance' => '@',
 }
 
 =item populate_xml (XML)
@@ -75,14 +75,16 @@ sub clear_object {
     return;
 }
 
-sub add_success { shift->add_instance ('success', @_) }
-sub add_error   { shift->add_instance ('error',   @_) }
+sub add_success  { shift->add_instance ('success', @_) }
+sub add_declined { shift->add_instance ('declined', @_) }
+sub add_error    { shift->add_instance ('error',   @_) }
 
 sub add_instance {
-    my ($self, $type, $id, $error) = @_;
+    my ($self, $type, $item, $text) = @_;
     my $obj = Remedy::CMDB::InstanceResponse->new ();
-    my $err = $obj->populate ('id' => $id, 'type' => $type, 'text' => $error);
-    return $err if $err;
+    my $error = $obj->populate ('item' => $item, 'type' => $type, 
+        'string' => $text);
+    return $error if $error;
     my $current = $self->instance;
     $self->instance (scalar @$current, $obj);
 }

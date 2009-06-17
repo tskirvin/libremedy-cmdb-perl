@@ -4,8 +4,14 @@
 ### Configuration ############################################################
 ##############################################################################
 
+use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/Stanford-Remedy/lib";
 use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-perl/lib";
 use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib";
+
+## Print debugging information?  Set with '--debug', can be set many times
+our $DEBUG = 4;
+
+our $CONFIG;
 
 ##############################################################################
 ### Declarations #############################################################
@@ -14,61 +20,86 @@ use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib"
 use strict;
 
 use Getopt::Long;
+use Pod::Usage;
 use Remedy::CMDB;
 use Remedy::CMDB::Register;
 use Remedy::CMDB::RegisterResponse;
 
-$|++;
+$0 =~ s%.*/%%g;     # Lose the annoying path information
+$|++;               # Flush output
 
 ##############################################################################
 ### main () ##################################################################
 ##############################################################################
 
-my ($file, @rest) = @ARGV;
-die "no file name\n" unless ($file);
+our $LOGGER   = Remedy::CMDB::Log->get_logger;
 
-my $response = Remedy::CMDB::RegisterResponse->new ();
+## we create the config item first so we can do logging and such
+my $config = eval { Remedy::CMDB::Config->load () };
+exit_error ("could not load CMDB configuration: $@") unless $config;
 
-my $cmdb = eval { Remedy::CMDB->connect () }
-    or die "couldn't create CMDB object: $@\n";
-my $logger = $cmdb->logger_or_die;
+## this is the only place we're going to use non-XML exit error strings
+my $parser = new Getopt::Long::Parser;
+my $result = $parser->getoptions (
+    'd|debug+'      => \$DEBUG,
+    'man'           => sub { pod2usage (-verbose => 2, -noperldoc => 1) },
+    'h|help'        => sub { pod2usage (-verbose => 1) }) || error_usage ();
 
-my $register = Remedy::CMDB::Register->read ('xml', 'type' => 'file', 
-    'source' => $file);
-    # do a lot here - probably e
+$config->log->more_logging ($DEBUG) if $DEBUG;
+# $LOGGER = $config->log->logger;
 
-my $mdr_parent = $register->mdrid;
-$logger->debug ("mdr_parent is $mdr_parent");
-if (! $mdr_parent) {
-    $response->add_error ('global', 'no mdrId offered');
-    exit_response ($response, 'FATAL' => 1);
-} 
+## read the XML from STDIN
+my $register = eval { Remedy::CMDB::Register->read ('xml', 'type' => 'stream', 
+    'source' => \*STDIN) };
+exit_error ("could not read registration source: $@") unless $register;
 
-my $dataset = $cmdb->mdr_to_dataset ($mdr_parent);
+$LOGGER->debug (sprintf ("parsed registration XML: %d items, %d relationships",
+    scalar $register->items, scalar $register->relationships));
 
-if (! $dataset) {
-    $response->add_error ('global', "no dataset mapping for $mdr_parent");
-    exit_response ($response, 'FATAL' => 1);
-}
+## Make sure the mdrId is set; we'll match it in a second
+my $mdr_parent = $register->mdrId || exit_error ("no mdrId in source XML");
+$LOGGER->debug ("mdr_parent is $mdr_parent");
 
-# TODO: look at the kerberos principal, ye mighty, and despair
+## Now make sure the mdrId matches a valid dataset
+my $dataset = $config->mdr_to_dataset ($mdr_parent) 
+    || exit_error ("no dataset mapping for $mdr_parent");
+$LOGGER->debug ("associated dataset is $dataset");
+
+## TODO: look at the kerberos principal, ye mighty, and despair
+$LOGGER->debug ("skipping kerberos principal check for now");
+
+## Finally, we can create our Remedy connection
+$LOGGER->debug ("connecting to CMDB");
+my $cmdb = eval { Remedy::CMDB->connect ('config' => $config) }
+    || exit_error ("couldn't create CMDB object: $@");
+exit_error ($@) if $@;
+
+## Start creating the response now
+our $RESPONSE = Remedy::CMDB::RegisterResponse->new ();
 
 my (@errors) = @_;
 
-my $count = 0;
+my $count_item = 0;
 foreach my $item ($register->items) { 
-    $count++;
-    my $error = register_item ($cmdb, $item, 'response' => $response, 
+    $count_item++;
+    my $error = register_item ($cmdb, $item, 'response' => $RESPONSE, 
         'dataset' => $dataset, 'mdr_parent' => $mdr_parent);
-    if ($error) { 
-        $response->add_error ($count, $error);
-    } else {
-    }
+    warn "E: $error\n";
+    $RESPONSE->add_declined ($item, $error) if $error;
 }
 
 # then relationships w/register_relationship
+my $count_relationships = 0;
+foreach my $relate ($register->relationships) {
+    $count_relationships++;
+    my $error = register_relationship ($cmdb, $relate, 'response' => $RESPONSE, 
+        'dataset' => $dataset, 'mdr_parent' => $mdr_parent);
+    $RESPONSE->add_declined ($relate, $error) if $error;
+}
 
-exit_response ($response);
+# not entirely right
+$LOGGER->info ("saved $count_item items, $count_relationships relationships");
+exit_response ($RESPONSE);
 
 ##############################################################################
 ### Subroutines ##############################################################
@@ -88,40 +119,78 @@ exit_response ($response);
 
 sub register_item {
     my ($cmdb, $item, %args) = @_;
+    my $logger = $cmdb->logger_or_die ('no logger at item registration');
+    my $remedy = $cmdb->remedy_or_die ('no remedy at item registartion');
+    my $session = $remedy->session_or_die ('no remedy session');
+
     my $resp = $args{'response'};   # TODO: give it a default
+    
+    my $dataset = $args{'dataset'} || return 'no dataset offered';
 
-    my $localid  = $item->localid  or return 'no localId';
+    my $localId  = $item->localId  or return 'no localId';
     my $datatype = $item->datatype or return 'no datatype';
-    my $mdrid    = $item->mdrid    or return 'no mdrId';
+    my $mdrId    = $item->mdrId    or return 'no mdrId';
+    my $record   = $item->record   or return 'no record';
 
-    if (my $mdr_parent = $args{'mdr_parent'}) { 
-        return 'mdrId does not match parent mdrId' unless $mdrid eq $mdr_parent;
-    }
+    return 'no parent mdr offered' unless my $mdr_parent = $args{'mdr_parent'};
+    return 'mdrId does not match parent mdrId' unless $mdrId eq $mdr_parent;
 
+    # this might want to move up a level
     my $class = $cmdb->translate_class ($datatype) 
         or return "invalid class: $datatype";
+    $logger->debug ("class '$datatype' => '$class'");
     
+    my $data = $record->data or return 'no record data';
+
+    my $name = $data->{'Name'};
+
+    my %search = (
+        'DatasetId' => $dataset,
+        'Name'      => $name
+    );
+
+    my @changes;
     my $obj;
-    if (my $data = $item->data) {
-        my $name = $data->{'Name'};
+    if ($obj = $cmdb->read ($class, %search)) { 
+        $logger->debug ("found existing object '$name' in '$dataset'");
+    } else { 
+        $logger->debug ("creating new object '$name' in '$dataset'");
+        $obj = $cmdb->create ($class);
+        $obj->set ('DatasetId' => $dataset);
+        push @changes, "new object";
+    }
 
-        my %search = (
-            'DatasetId' => $dataset,
-            'Name'      => $name
-        );
-
-        if (my $obj = $cmdb->read ($class, %search)) { 
-        
-        } else { 
-            $obj = $cmdb->create ($class);
-            warn "O: $obj\n";
-            $obj->set ('DatasetId' => $mdrid, 'Name' => $name);
+    my @fields;
+    foreach my $key (sort keys %{$data}) { 
+        my $value = $$data{$key};
+        return "invalid key for $datatype: '$key'" unless $obj->validate ($key);
+        if ($value eq $obj->get ($key)) { 
+            # already set, don't have to change anything
+        } else {
+            $logger->all (sprintf ("setting %-20.20s to %s", $key, $value));
+            $obj->set ($key, $value);
+            push @fields, $key;
         }
-
-        foreach (keys %{$data}) { $obj->set ($_, $$data{$_}); }
-        # $obj->save;
+    }
+    unless (scalar @fields) { 
+        $logger->debug ("nothing to update");
+        
+        ## add a "successful save"
+        return;
     } else {
-        # no data?  what do you expect them to do with it?
+        my $text = join (', ', @fields);
+        $logger->info ("updated $text");
+        $logger->debug ("saving entry for $name");
+        if (my $error = $obj->save) { 
+            my $error = $session->error;
+            $logger->error ("error saving '$name'", $error);
+            return $error;
+        } else {
+            $logger->info ("saved '$name'");
+            ## add a "successful save"
+            return;
+            
+        }
     }
 }
 
@@ -134,4 +203,18 @@ sub exit_response {
     my ($response, %args) = @_;
     print scalar $response->xml;
     exit $args{'FATAL'} ? 1 : 0;
+}
+
+sub exit_error {
+    my ($text, %args) = @_;
+    $LOGGER->fatal ($text);
+    my $response = Remedy::CMDB::RegisterResponse->new ();
+    $response->add_error ('global', $text);
+    exit_response ($response, 'FATAL' => 1, %args);
+}
+
+sub error_usage {
+    my ($error) = @_;
+    $LOGGER->error ($error);
+    pod2usage (-exit_status => 2, -verbose => 1);
 }
