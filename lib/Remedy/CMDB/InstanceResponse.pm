@@ -21,6 +21,8 @@ our $VERSION = "0.01.01";
 use strict;
 use warnings;
 
+use Remedy::CMDB::Item::AlternateInstanceID;
+
 use Remedy::CMDB::Struct qw/init_struct/;
 our @ISA = init_struct (__PACKAGE__);
 
@@ -37,11 +39,11 @@ our @ISA = init_struct (__PACKAGE__);
 =cut
 
 sub fields {
-    # 'instanceid'  => 'Remedy::CMDB::Item::InstanceID',
-    'instanceid'  => '$',
+    # 'instanceId'  => 'Remedy::CMDB::Item::InstanceID',
+    'instanceId'  => '$',
     'string'      => '$',
     'type'        => '$',
-    'alternateid' => '@',
+    'alternateId' => '@',
 }
 
 =item populate_xml (XML)
@@ -68,7 +70,7 @@ sub populate_xml {
     if (my $accept = $xml->first_child ('accepted')) {
         my @alternate;
         foreach my $item ($accept->children ('alternateInstanceId')) {
-            my $obj = Remedy::CMDB::AlternateInstanceID->read ('xml',
+            my $obj = Remedy::CMDB::Item::AlternateInstanceID->read ('xml',
                 'source' => $item, 'type' => 'object');
             return 'no object created' unless $obj;
             return $obj unless ref $obj;
@@ -79,9 +81,9 @@ sub populate_xml {
     }
 
     return 'cannot be both declined and accepted'
-        if ($self->reason && $self->alternateid);
+        if ($self->reason && $self->alternateId);
     return 'must be either declined or accepted'
-        unless ($self->reason || $self->alternateid);
+        unless ($self->reason || $self->alternateId);
 
     {
         my $id;
@@ -93,8 +95,8 @@ sub populate_xml {
             return $obj unless ref $obj;
             $id = $obj;
         }
-        $self->instanceid ($id);
-        return "no instanceid" unless $self->instanceid;
+        $self->instanceId ($id);
+        return "no instanceId" unless $self->instanceId;
     }
 
     return;
@@ -109,12 +111,20 @@ sub xml {
 
     $writer->startTag ($self->tag_type);
     
-    my $id = $self->instanceid;
+    my $id = $self->instanceId;
     $writer->write_elem_or_raw ('instanceId', $id);
+
+    my $alternate = $self->alternateId;
 
     my $type = lc $self->type;
     if ($type eq 'accepted') { 
         $writer->startTag ('accepted');
+        foreach (@$alternate) {
+            warn "A: $_\n";
+            $writer->write_elem_or_raw ('alternateInstanceId', $_);
+        }
+        $writer->dataElement ('notes', $self->string);
+        # write out the alternateInstanceId
         $writer->endTag;
     } elsif ($type eq 'declined') {
         $writer->startTag ('declined');
@@ -140,9 +150,9 @@ sub populate {
     my ($self, %args) = @_;
     return 'no item' unless my $item = $args{'item'};
 
-    my $id = ref $item ? $item->instanceid 
+    my $id = ref $item ? $item->instanceId 
                        : 'GLOBAL';
-    $self->instanceid ($id);
+    $self->instanceId ($id);
 
     my $type = $args{'type'} || 'default';
     if    ($type eq 'accepted') { return $self->populate_accepted (%args) }
@@ -151,10 +161,26 @@ sub populate {
     else                        { return "invalid type: $type" }
 }
 
+=item populate_accepted (ARGHASH)
+
+=over 2
+
+=item obj I<Remedy::CMDB::Item>
+
+=item string I<STRING>
+
+=cut
+
 sub populate_accepted {
     my ($self, %args) = @_;
     $self->type ('accepted');
-    # this is wrong - should populate a list of alternateInstanceIds
+    if (my $obj = $args{'obj'}) {
+        warn "O: $obj\n";
+        my $alternate = Remedy::CMDB::Item::AlternateInstanceID->new;
+        $alternate->mdrId   ($obj->get ('DatasetId'));
+        $alternate->localId ($obj->get ('RequestId'));
+        $self->alternateId (0, $alternate);
+    }
     $self->string ($args{'string'});
     return;
 }
@@ -175,8 +201,8 @@ sub populate_error {
 
 sub clear_object {
     my ($self) = @_;
-    $self->alternateid ([]);
-    $self->instanceid  (undef);
+    $self->alternateId ([]);
+    $self->instanceId  (undef);
     $self->string      (undef);
     return;
 }

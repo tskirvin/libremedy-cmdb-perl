@@ -75,15 +75,15 @@ sub clear_object {
     return;
 }
 
-sub add_success  { shift->add_instance ('success', @_) }
+sub add_accepted { shift->add_instance ('accepted', @_) }
 sub add_declined { shift->add_instance ('declined', @_) }
-sub add_error    { shift->add_instance ('error',   @_) }
+sub add_error    { shift->add_instance ('error',    @_) }
 
 sub add_instance {
-    my ($self, $type, $item, $text) = @_;
+    my ($self, $type, $item, $text, @args) = @_;
     my $obj = Remedy::CMDB::InstanceResponse->new ();
     my $error = $obj->populate ('item' => $item, 'type' => $type, 
-        'string' => $text);
+        'string' => $text, @args);
     return $error if $error;
     my $current = $self->instance;
     $self->instance (scalar @$current, $obj);

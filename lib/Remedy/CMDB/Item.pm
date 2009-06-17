@@ -37,12 +37,12 @@ our @ISA = init_struct (__PACKAGE__);
 
 =cut
 
-sub id      { shift->instanceid->id }
-sub localId { shift->instanceid->localId }
-sub mdrId   { shift->instanceid->mdrId   }
+sub id      { shift->instanceId->id }
+sub localId { shift->instanceId->localId }
+sub mdrId   { shift->instanceId->mdrId   }
 
 sub fields {
-    'instanceid' => 'Remedy::CMDB::Item::InstanceID',
+    'instanceId' => 'Remedy::CMDB::Item::InstanceID',
     'record'     => '$',
 }
 
@@ -63,8 +63,8 @@ sub populate_xml {
             return $obj unless ref $obj;
             $id = $obj;
         }
-        $self->instanceid ($id);
-        return "no instanceid" unless $self->instanceid;
+        $self->instanceId ($id);
+        return "no instanceId" unless $self->instanceId;
     }
 
     {
@@ -104,7 +104,7 @@ sub tag_type { 'item' }
 sub text_old {
     my ($self, %args) = @_;
     my @return;
-    push @return, "ID: " . $self->instanceid->text;
+    push @return, "ID: " . $self->instanceId->text;
     foreach my $record ($self->record) { 
         foreach ($record->text) { push @return, $_; }
         push @return, '';

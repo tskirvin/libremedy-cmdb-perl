@@ -84,7 +84,6 @@ foreach my $item ($register->items) {
     $count_item++;
     my $error = register_item ($cmdb, $item, 'response' => $RESPONSE, 
         'dataset' => $dataset, 'mdr_parent' => $mdr_parent);
-    warn "E: $error\n";
     $RESPONSE->add_declined ($item, $error) if $error;
 }
 
@@ -94,7 +93,7 @@ foreach my $relate ($register->relationships) {
     $count_relationships++;
     my $error = register_relationship ($cmdb, $relate, 'response' => $RESPONSE, 
         'dataset' => $dataset, 'mdr_parent' => $mdr_parent);
-    $RESPONSE->add_declined ($relate, $error) if $error;
+    # $RESPONSE->add_declined ($relate, $error) if $error;
 }
 
 # not entirely right
@@ -172,26 +171,22 @@ sub register_item {
             push @fields, $key;
         }
     }
-    unless (scalar @fields) { 
-        $logger->debug ("nothing to update");
-        
-        ## add a "successful save"
-        return;
-    } else {
-        my $text = join (', ', @fields);
-        $logger->info ("updated $text");
-        $logger->debug ("saving entry for $name");
+
+    push @changes, "updated " . join (", ", @fields) if scalar @fields;
+    my $string = join ('; ', @changes) || 'no changes';
+
+    $logger->info ("$name: $string");
+    if (scalar @changes) { 
+        $logger->debug ("saving entry for '$name'");
         if (my $error = $obj->save) { 
-            my $error = $session->error;
-            $logger->error ("error saving '$name'", $error);
-            return $error;
-        } else {
-            $logger->info ("saved '$name'");
-            ## add a "successful save"
-            return;
-            
+            my $sess_error = $session->error;
+            my $full_error = join ('', $error, $sess_error);
+            return $full_error;
         }
-    }
+    } 
+
+    $resp->add_accepted ($item, $string, 'obj' => $obj);
+    return;
 }
 
 sub register_relationship {
