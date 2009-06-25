@@ -1,0 +1,102 @@
+#!/usr/bin/perl
+# Copyright and license are in the documentation below.
+
+=head1 NAME
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
+
+=cut
+
+##############################################################################
+### Configuration ############################################################
+##############################################################################
+
+## Modify and uncomment this to use user modules instead of system-wide
+## ones.  You'll need this unless you're installing as root.
+# use lib '/FULL/PATH/TO/PERL/MODULES';
+use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib";
+# use lib '/PATH/TO/USER/CODE';
+
+## Print debugging information?  Set with '--debug', can be set many times
+our $DEBUG = 0;
+
+##############################################################################
+### Declarations #############################################################
+##############################################################################
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use Remedy::CMDB::RegisterResponse qw/exit_error/;
+use XML::Twig;
+
+$0 =~ s%.*/%%g;     # Lose the annoying path information
+$|++;               # Flush output
+
+###############################################################################
+### main() ####################################################################
+###############################################################################
+
+my $parser = Getopt::Long::Parser->new;
+my $result = $parser->getoptions (
+    'd|debug+'      => \$DEBUG,
+    'man'           => sub { pod2usage (-verbose => 2, -noperldoc => 1) },
+    'h|help'        => sub { pod2usage (-verbose => 1) });
+exit_error ('bad command-line options') unless $result;
+
+# just make sure the XML is good
+my $twig = XML::Twig->new;
+$twig->safe_parse (join ('', <STDIN>)) || exit_error ('bad XML on input');
+
+exit_error ('query service not yet implemented');
+
+##############################################################################
+### Subroutines ##############################################################
+##############################################################################
+# Some will come, I suspect.
+
+###############################################################################
+### Documentation #############################################################
+###############################################################################
+
+=head1 NAME
+
+cmdb-query -- stub for querying the Remedy CMDB
+
+=head1 SYNOPSIS
+
+    remctl cmdb cmdb query < XML
+
+=head1 DESCRIPTION
+
+B<cmdb-query> takes an XML-formatted query
+
+=head1 NOTES
+
+=head1 REQUIREMENTS
+
+B<Remedy::CMDB>, B<XML::Twig>
+
+=head1 SEE ALSO
+
+B<cmdb-register>
+
+=head1 TODO
+
+Actually write a query service.
+
+=head1 AUTHOR
+
+Tim Skirvin <tskirvin@stanford.edu>
+
+=head1 LICENSE
+
+Copyright 2009 Board of Trustees, Leland Stanford Jr. University
+
+This program is free software; you may redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
