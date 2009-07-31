@@ -258,13 +258,22 @@ sub mdr_to_dataset {
     return $self->sources->datasource ($mdr);
 }
 
+=item class_human_to_remedy (HUMAN)
+
+=cut
+
 sub class_human_to_remedy {
     my ($self, $class) = @_;
-    return $self->classes->human_to_remedy ($class);
+    my $logger = $self->logger_or_die;
+    my $human = $self->classes->human_to_remedy ($class);
+    if ($human) { 
+        $logger->debug ("class '$class' => '$human'");
+        return $human;
+    } else {
+        $logger->debug ("no class for '$class'");
+        return;
+    }
 }
-
-
-
 
 =item debug ()
 
@@ -283,6 +292,9 @@ sub debug {
     wantarray ? @return : join ("\n", @return, '');
 }
 
+sub log_or_die    { shift->_or_die ('log', "no log", @_) }
+sub logger_or_die { shift->log_or_die (@_)->logger }
+
 =back
 
 =cut
@@ -300,6 +312,25 @@ sub _init_functions {
         $self->$key ($$value) 
     }
     $self;
+}
+
+### _or_die (TYPE, ERROR, EXTRATEXT, COUNT)
+# Helper function for Class::Struct accessors.  If the value is not defined -
+# that is, it wasn't set - then we will immediately die with an error message
+# based on a the calling function (can go back extra levels by offering
+# COUNT), a generic error message ERROR, and a developer-provided, optional
+# error message EXTRATEXT.  
+sub _or_die {
+    my ($self, $type, $error, $extra, $count) = @_;
+    return $self->$type if defined $self->$type;
+    $count ||= 0;
+
+    my $func = (caller ($count + 2))[3];    # default two levels back
+
+    chomp $extra if defined $extra;
+    my $fulltext = sprintf ("%s: %s", $func, $extra ? "$error ($extra)"
+                                                    : $error);
+    die "$fulltext\n";
 }
 
 ##############################################################################

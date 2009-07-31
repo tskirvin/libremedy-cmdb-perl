@@ -24,11 +24,8 @@ use warnings;
 use Remedy::CMDB::Struct qw/init_struct/;
 our @ISA = init_struct (__PACKAGE__);
 
-use Remedy::CMDB::Register::XML;
-use Remedy::CMDB::Register::Remedy;
-
 use Remedy::CMDB::ItemList;
-use Remedy::CMDB::Relationship;
+use Remedy::CMDB::RelationshipList;
 
 ##############################################################################
 ### Subroutines ##############################################################
@@ -43,9 +40,9 @@ use Remedy::CMDB::Relationship;
 =cut
 
 sub fields {
-    'mdrId'         => '$',
-    'itemlist'      => 'Remedy::CMDB::ItemList',
-    'relationships' => '@',
+    'mdrId'             => '$',
+    'itemList'          => 'Remedy::CMDB::ItemList',
+    'relationshipList'  => 'Remedy::CMDB::RelationshipList',
 }
 
 =item populate_xml (XML)
@@ -55,38 +52,32 @@ Takes an XML::Twig::Elt object I<XML>
 =cut
 
 sub populate_xml {
-    warn "PX: @_\n";
     my ($self, $xml) = @_;
     return 'no xml' unless ($xml && ref $xml);
     return 'invalid tag type: ' . $xml->tag
         unless ($xml->tag eq $self->tag_type); 
 
     $self->clear_object;
-    
+
     my $mdr = $xml->first_child_text ('mdrId') || '';
     return 'no mdrId' unless $mdr;
     $self->mdrId ($mdr);
 
-    my @items;
     if (my $itemlist = $xml->first_child ('itemList')) {
         my $obj = Remedy::CMDB::ItemList->read ('xml', 'source' => $itemlist,
             'type' => 'object');
-        return 'no object created' unless $obj;
+        return 'could not parse itemList' unless $obj;
         return $obj unless ref $obj;
-        $self->itemlist ($obj);
+        $self->itemList ($obj);
     }
 
-    my @relate;
     if (my $relationshiplist = $xml->first_child ('relationshipList')) {
-        foreach my $item ($relationshiplist->children ('relationship')) {
-            my $obj = Remedy::CMDB::Relationship->read ('xml', 
-                'source' => $item, 'type' => 'object');
-            return "no object created" unless $obj;
-            return $obj unless ref $obj;
-            push @relate, $obj;
-        }
+        my $obj = Remedy::CMDB::RelationshipList->read ('xml', 
+            'source' => $relationshiplist, 'type' => 'object');
+        return 'could not parse relationshipList' unless $obj;
+        return $obj unless ref $obj;
+        $self->relationshipList ($obj);
     }
-    $self->relationships (\@relate);
     
     return;
 }
@@ -96,8 +87,8 @@ sub populate_remedy { "not yet implemented" }
 sub clear_object {
     my ($self) = @_;
     $self->mdrId ('');
-    $self->itemlist ();
-    $self->relationships ([]);
+    $self->itemList ();
+    $self->relationshipList ();
     return;
 }
 
@@ -105,13 +96,12 @@ sub text {
     my ($self) = @_;
     my @return;
 
-    push @return, "ID: " . $self->id;
     push @return, '', "Items";
-    foreach my $item (@{$self->itemlist->list}) { 
+    foreach my $item (@{$self->itemList->list}) { 
         foreach ($item->text)     { push @return, "  $_" }
     }
     push @return, '', "Relationships";
-    foreach my $relation (@{$self->relationships}) { 
+    foreach my $relation (@{$self->relationshipList}) { 
         foreach ($relation->text) { push @return, "  $_" }
     }
 
@@ -120,7 +110,7 @@ sub text {
 
 sub items {
     my ($self) = @_;
-    return unless my $itemlist = $self->itemlist;
+    return unless my $itemlist = $self->itemList;
     return unless my $list = $itemlist->list;
     return unless ref $list && scalar @$list;
     return @$list;
@@ -128,15 +118,10 @@ sub items {
 
 sub relationships {
     my ($self) = @_;
-    
-    return [];
-}
-
-sub id {
-    my ($self) = @_;
-    my $mdrId = $self->mdrId || return;
-    # this is wrong but will do for now
-    return $mdrId;
+    return unless my $relationshiplist = $self->relationshipList;
+    return unless my $list = $relationshiplist->list;
+    return unless ref $list && scalar @$list;
+    return @$list;
 }
 
 sub tag_type { 'registerRequest' }
@@ -150,5 +135,3 @@ sub tag_type { 'registerRequest' }
 ##############################################################################
 
 1;
-
-

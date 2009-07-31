@@ -3,6 +3,8 @@ our $VERSION = "0.01";
 
 =head1 NAME
 
+Remedy::CMDB::Template::List - a Remedy::CMDB::Struct object for item lists
+
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
@@ -38,17 +40,13 @@ All items
 
 =over 4
 
-=item mdrId ($)
-
-=item localId ($)
+=item list (@)
 
 =back
 
 =cut
 
-sub fields {
-    'list'    => '@',
-}
+sub fields { 'list' => '@' }
 
 =item populate_xml (XML)
 
@@ -62,7 +60,6 @@ sub populate_xml {
     return "tag type should be $type, not $tag" unless ($tag eq $type);
 
     my $list_class = $self->list_class;
-    warn "L: $list_class\n";
     return 'no list class' unless $list_class;
     my $list_type  = $list_class->tag_type;
 
@@ -109,22 +106,7 @@ sub clear_object {
 
 sub text { 
     my ($self) = @_;
-    
-}
-
-sub xml_bad { 
-    my ($self, @args) = @_;
-
-    my $string;
-    my $writer = XML::Writer->new ('OUTPUT' => \$string, 'DATA_INDENT' => 4,
-        'NEWLINES' => 0, 'DATA_MODE' => 1, 'UNSAFE' => 1, @args);
-    $writer->startTag ($self->tag_type);
-    foreach (@{$self->list}) { 
-    }
-    $writer->endTag;
-    $writer->end;
-
-    return $string;
+    ## FIXME: actually write something here
 }
 
 =back
@@ -173,8 +155,5 @@ This program is free software; you may redistribute it and/or modify
 it under the same terms as Perl itself.
 
 =cut
-
-1;
-
 
 1;

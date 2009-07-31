@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -T
 
 ##############################################################################
 ### Configuration ############################################################
@@ -9,21 +9,21 @@ use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-perl/lib";
 use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib";
 
 ## Print debugging information?  Set with '--debug', can be set many times
-our $DEBUG = 4;
-
-our $CONFIG;
+our $DEBUG = 5;
 
 ##############################################################################
 ### Declarations #############################################################
 ##############################################################################
 
 use strict;
+# use warnings;
 
 use Getopt::Long;
+use Lingua::EN::Inflect qw/inflect/;
 use Pod::Usage;
-use Remedy::CMDB;
 use Remedy::CMDB::Register;
 use Remedy::CMDB::RegisterResponse;
+use Remedy::CMDB;
 
 $0 =~ s%.*/%%g;     # Lose the annoying path information
 $|++;               # Flush output
@@ -79,125 +79,46 @@ our $RESPONSE = Remedy::CMDB::RegisterResponse->new ();
 
 my (@errors) = @_;
 
-my $count_item = 0;
+my ($item_count, $item_error);
 foreach my $item ($register->items) { 
-    $count_item++;
-    my $error = register_item ($cmdb, $item, 'response' => $RESPONSE, 
+    $item_count++;
+    my $error = $cmdb->register_item ($item, 'response' => $RESPONSE, 
         'dataset' => $dataset, 'mdr_parent' => $mdr_parent);
-    $RESPONSE->add_declined ($item, $error) if $error;
+    if ($error) { 
+        $RESPONSE->add_declined ($item, $error) if $error;
+        $item_error++;
+    }
 }
 
 # then relationships w/register_relationship
-my $count_relationships = 0;
+my ($relate_count, $relate_error);
 foreach my $relate ($register->relationships) {
-    $count_relationships++;
-    my $error = register_relationship ($cmdb, $relate, 'response' => $RESPONSE, 
+    $relate_count++;
+    my $error = $cmdb->register_relationship ($relate, 'response' => $RESPONSE, 
         'dataset' => $dataset, 'mdr_parent' => $mdr_parent);
-    # $RESPONSE->add_declined ($relate, $error) if $error;
+    if ($error) {
+        $RESPONSE->add_declined ($relate, $error) if $error;
+        $relate_error++;
+    }
 }
 
-# not entirely right
-$LOGGER->info ("saved $count_item items, $count_relationships relationships");
+$LOGGER->info (sprintf ("%s out of %s", 
+    inflect ("NUM($item_error) PL_N(error)"),
+    inflect ("NUM($item_count) PL_N(item)")));
+$LOGGER->info (sprintf ("%s out of %s", 
+    inflect ("NUM($relate_error) PL_N(error)"),
+    inflect ("NUM($relate_count) PL_N(relationship)")));
+
 exit_response ($RESPONSE);
 
 ##############################################################################
 ### Subroutines ##############################################################
 ##############################################################################
 
-=item register_item (ITEM, ARGHASH)
-
-=over 4
-
-=item mdr_parent 
-
-=item response 
-
-=back
-
-=cut
-
-sub register_item {
-    my ($cmdb, $item, %args) = @_;
-    my $logger = $cmdb->logger_or_die ('no logger at item registration');
-    my $remedy = $cmdb->remedy_or_die ('no remedy at item registartion');
-    my $session = $remedy->session_or_die ('no remedy session');
-
-    my $resp = $args{'response'};   # TODO: give it a default
-    
-    my $dataset = $args{'dataset'} || return 'no dataset offered';
-
-    my $localId  = $item->localId  or return 'no localId';
-    my $datatype = $item->datatype or return 'no datatype';
-    my $mdrId    = $item->mdrId    or return 'no mdrId';
-    my $record   = $item->record   or return 'no record';
-
-    return 'no parent mdr offered' unless my $mdr_parent = $args{'mdr_parent'};
-    return 'mdrId does not match parent mdrId' unless $mdrId eq $mdr_parent;
-
-    # this might want to move up a level
-    my $class = $cmdb->translate_class ($datatype) 
-        or return "invalid class: $datatype";
-    $logger->debug ("class '$datatype' => '$class'");
-    
-    my $data = $record->data or return 'no record data';
-
-    my $name = $data->{'Name'};
-
-    my %search = (
-        'DatasetId' => $dataset,
-        'Name'      => $name
-    );
-
-    my @changes;
-    my $obj;
-    if ($obj = $cmdb->read ($class, %search)) { 
-        $logger->debug ("found existing object '$name' in '$dataset'");
-    } else { 
-        $logger->debug ("creating new object '$name' in '$dataset'");
-        $obj = $cmdb->create ($class);
-        $obj->set ('DatasetId' => $dataset);
-        push @changes, "new object";
-    }
-
-    my @fields;
-    foreach my $key (sort keys %{$data}) { 
-        my $value = $$data{$key};
-        return "invalid key for $datatype: '$key'" unless $obj->validate ($key);
-        if ($value eq $obj->get ($key)) { 
-            # already set, don't have to change anything
-        } else {
-            $logger->all (sprintf ("setting %-20.20s to %s", $key, $value));
-            $obj->set ($key, $value);
-            push @fields, $key;
-        }
-    }
-
-    push @changes, "updated " . join (", ", @fields) if scalar @fields;
-    my $string = join ('; ', @changes) || 'no changes';
-
-    $logger->info ("$name: $string");
-    if (scalar @changes) { 
-        $logger->debug ("saving entry for '$name'");
-        if (my $error = $obj->save) { 
-            my $sess_error = $session->error;
-            my $full_error = join ('', $error, $sess_error);
-            return $full_error;
-        }
-    } 
-
-    $resp->add_accepted ($item, $string, 'obj' => $obj);
-    return;
-}
-
-sub register_relationship {
-    my ($cmdb, $relationship, %args) = @_;
-
-}
-
 sub exit_response {
     my ($response, %args) = @_;
     print scalar $response->xml;
-    exit $args{'FATAL'} ? 1 : 0;
+    exit defined $args{'FATAL'} ? 1 : 0;
 }
 
 sub exit_error {
@@ -213,3 +134,7 @@ sub error_usage {
     $LOGGER->error ($error);
     pod2usage (-exit_status => 2, -verbose => 1);
 }
+
+##############################################################################
+### Documentation ############################################################
+##############################################################################

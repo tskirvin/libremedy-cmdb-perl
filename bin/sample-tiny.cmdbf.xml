@@ -4,6 +4,28 @@
   <itemList>
     <item>
       <record>
+        <computerSystem>
+          <Name>zm-ldap1.stanford.edu</Name>
+          <ShortDescription>zm-ldap1.stanford.edu</ShortDescription>
+          <AssetClass>Hardware</AssetClass>
+          <firmware_version>2.5.0</firmware_version>
+          <HostName>zm-ldap1.stanford.edu</HostName>
+          <PrimaryCapability>Server</PrimaryCapability>
+          <ManufacturerName>Dell Computer Corporation</ManufacturerName>
+          <Model>PowerEdge 1655MC</Model>
+          <SerialNumber>123123</SerialNumber>
+        </computerSystem>
+        <recordMetadata>
+          <recordId />
+        </recordMetadata>
+      </record>
+      <instanceId>
+        <mdrId>http://puppet.stanford.edu</mdrId>
+        <localId>123123</localId>
+      </instanceId>
+    </item>
+    <item>
+      <record>
         <businessService>
           <Name>SU Email and Calendar</Name>
           <ShortDescription>SU Email and Calendar</ShortDescription>
@@ -22,7 +44,7 @@
         <application>
           <Name>Zimbra LDAP</Name>
           <ShortDescription>Zimbra LDAP</ShortDescription>
-          <applicationType>StandardApplication</applicationType>
+          <ApplicationType>StandardApplication</ApplicationType>
           <VersionNumber>1.0.2</VersionNumber>
         </application>
         <recordMetadata>
@@ -66,31 +88,6 @@
       <instanceId>
         <mdrId>http://puppet.stanford.edu</mdrId>
         <localId>zm-ldap2.stanford.edu#openldap</localId>
-      </instanceId>
-    </item>
-    <item>
-      <record>
-        <computerSystem>
-          <Name>zm-ldap1.stanford.edu</Name>
-          <ShortDescription>zm-ldap1.stanford.edu</ShortDescription>
-          <AssetClass>Hardware</AssetClass>
-          <firmware_version>2.5.0</firmware_version>
-          <HostName>zm-ldap1.stanford.edu</HostName>
-          <PrimaryCapability>Server</PrimaryCapability>
-          <ManufacturerName>Dell Computer Corporation</ManufacturerName>
-          <Category>Hardware</Category>
-          <Type>Processing Unit</Type>
-          <Item>Server</Item>
-          <Model>PowerEdge 1655MC</Model>
-          <SerialNumber>123123</SerialNumber>
-        </computerSystem>
-        <recordMetadata>
-          <recordId />
-        </recordMetadata>
-      </record>
-      <instanceId>
-        <mdrId>http://puppet.stanford.edu</mdrId>
-        <localId>123123</localId>
       </instanceId>
     </item>
     <item>

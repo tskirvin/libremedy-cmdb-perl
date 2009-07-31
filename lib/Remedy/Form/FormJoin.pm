@@ -1,24 +1,24 @@
-package Remedy::Form::CMDB_Clear;
+package Remedy::Form::FormJoin;
 our $VERSION = "0.11";
 # Copyright and license are in the documentation below.
 
 =head1 NAME
 
-Remedy::CMDB_Clear - departments in remedy
+Remedy::FormJoin - departments in remedy
 
 =head1 SYNOPSIS
 
-    use Remedy::Form::CMDB_Clear;
+    use Remedy::Form::FormJoin;
     # you know what?  just don't use this class.  it can only end badly
     
 =head1 DESCRIPTION
 
-Remedy::Form::CMDB_Clear manages the
+Remedy::Form::FormJoin manages the
 I<+TEST-DeleteBaseElementAndBaseRelationship> form in Remedy, which is
 a specially-designed form that deletes all items in I<BaseElement> and
 I<BaseRelationship> when a new item is created. 
 
-Remedy::CMDB_Clear is a sub-class of B<Remedy::Form>, and is not separately
+Remedy::FormJoin is a sub-class of B<Remedy::Form>, and is not separately
 registered.
 
 =cut
@@ -53,8 +53,6 @@ The text we'll save in the database entry explaining why we ran the clear.
 =cut
 
 sub field_map { 
-    'text'  => 'Short Description',
-    'mdrId' => 'MDR ID'
 }
 
 ##############################################################################
@@ -71,7 +69,7 @@ sub field_map {
 
 =cut
 
-sub table { '+TEST-DeleteBaseElementAndBaseRelationship' }
+sub table { 'C' }
 
 =back
 

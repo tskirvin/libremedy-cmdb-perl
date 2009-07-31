@@ -72,7 +72,7 @@ sub write_raw_with_format {
         if ($line =~ /^\s*$/) { 
             $self->raw ($line);
         } else { 
-            my $text = join ('', $indent, $indent, $line, "\n");
+            my $text = join ('', $indent, $line, "\n");
             $self->raw ($text);
         } 
     }

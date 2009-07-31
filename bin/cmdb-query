@@ -68,13 +68,39 @@ cmdb-query -- stub for querying the Remedy CMDB
 
 =head1 SYNOPSIS
 
-    remctl cmdb cmdb query < XML
+B<remctl cmdb cmdb query> cmdb query < I<XML>
 
 =head1 DESCRIPTION
 
-B<cmdb-query> takes an XML-formatted query
+B<cmdb-query> takes an XML-formatted query, parses the request to confirm
+that the XML is valid, and passes it off to the local remedy query service
+(along with a set of environment variables); it then returns an XML-formatted
+response.  It is meant for use with B<remctl>, so that clients can issue
+arbitrary queries.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-d>, B<--debug>
+
+Print debugging information.  Can be offered multiple times to increase
+debugging accordingly.
+
+=item B<-h>, B<--help>
+
+Prints out the synopsis information and exits.
+
+=item B<--man>
+
+Prints this manual page and exit.
+
+=back
 
 =head1 NOTES
+
+All of the above 'description' stuff is dependent on the system actually being
+written, which we haven't done yet.  The stub seemed like a good idea, though.
 
 =head1 REQUIREMENTS
 
@@ -83,6 +109,10 @@ B<Remedy::CMDB>, B<XML::Twig>
 =head1 SEE ALSO
 
 B<cmdb-register>
+
+=head1 HOMEPAGE
+
+TBD.
 
 =head1 TODO
 

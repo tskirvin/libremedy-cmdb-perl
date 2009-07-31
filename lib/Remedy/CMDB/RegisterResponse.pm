@@ -21,10 +21,14 @@ our $VERSION = "0.01.01";
 use strict;
 use warnings;
 
-use Remedy::CMDB::Struct qw/init_struct/;
-our @ISA = init_struct (__PACKAGE__);
-
+use Exporter;
 use Remedy::CMDB::InstanceResponse;
+use Remedy::CMDB::Struct qw/init_struct/;
+
+our @ISA = init_struct (__PACKAGE__);
+our @EXPORT_OK = qw/exit_error exit_response/;
+
+
 
 ##############################################################################
 ### Subroutines ##############################################################
@@ -87,6 +91,27 @@ sub add_instance {
     return $error if $error;
     my $current = $self->instance;
     $self->instance (scalar @$current, $obj);
+}
+
+=item exit_error ()
+
+=cut
+
+sub exit_error {
+    my ($text, %args) = @_;
+    my $response = Remedy::CMDB::RegisterResponse->new ();
+    $response->add_error ('global', $text);
+    $response->exit_response ('FATAL' => 1, %args);
+}
+
+=item exit_response (ARGHASH)
+
+=cut
+
+sub exit_response {
+    my ($response, %args) = @_;
+    print scalar $response->xml;
+    exit defined $args{'FATAL'} ? 1 : 0;
 }
 
 sub tag_type { 'registerResponse' }

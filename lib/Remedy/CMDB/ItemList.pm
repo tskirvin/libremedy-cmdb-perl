@@ -7,6 +7,7 @@ package Remedy::CMDB::ItemList;
 use strict;
 
 use Remedy::CMDB::Template::List;
+use Remedy::CMDB::Item;
 
 our @ISA = qw/Remedy::CMDB::Template::List/;
 

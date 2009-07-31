@@ -32,6 +32,8 @@ our $KIDS_MAX = 1;
 ## servers you connect to; the number is in seconds.
 our $TIMEOUT = 10;
 
+our $ALARM = 15;
+
 ##############################################################################
 ### Declarations #############################################################
 ##############################################################################
@@ -96,24 +98,23 @@ while (my $client = $server->socket->accept) {
 
     select ($client);
 
-    # Central loop - every time there's input, do something with it.
-    my $time = time;
+    $SIG{ALRM} = sub { exit_error ("Submission time of $ALARM seconds exceeded") }; 
+    alarm $ALARM;
 
     my @input;
     while (my $line = <$client>) { 
         warn "L: $line\n";
-        last if ($line =~ /^<\/xml>$/);
+        last if ($line =~ /^<\/cmdb-client>$/);
         push @input, $line;
     }
     warn "I: @input\n";
     my @return = $server->process (@input);
-    #while (my $line = <$client>) {
-        #$server->process ($client, $line);
-    #}
-    close $client;
-    select (\*STDOUT);
+    foreach (@return) { print $client $_ }
 
     exit 0;
+
+    # Central loop - every time there's input, do something with it.
+    # my $time = time;
 
 #    while (<$client>) {
 #        if (time - $TIMEOUT > $time) {
@@ -132,9 +133,10 @@ while (my $client = $server->socket->accept) {
     # Close up and exit.
     close $client;
     select (\*STDOUT);
+    exit 0;
 }
 
-#$server->server_close;
+$server->server_close;
 exit 0;
 
 ###############################################################################

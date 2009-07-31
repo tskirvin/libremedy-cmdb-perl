@@ -106,13 +106,14 @@ sub xml {
     my ($self, @args) = @_;
 
     my $string;
-    my $writer = XML::Writer->new ('OUTPUT' => \$string, 'DATA_INDENT' => 4,
-        'NEWLINES' => 0, 'DATA_MODE' => 1, 'UNSAFE' => 1, @args);
+    my $writer = XML::Writer::Raw->new ('OUTPUT' => \$string, 
+        'DATA_INDENT' => 4, 'NEWLINES' => 0, 'DATA_MODE' => 1, 
+        'UNSAFE' => 1, @args);
 
     $writer->startTag ($self->tag_type);
     
     my $id = $self->instanceId;
-    $writer->write_elem_or_raw ('instanceId', $id);
+    $writer->write_elem_or_raw ('instanceId', $self->instanceId);
 
     my $alternate = $self->alternateId;
 
@@ -120,7 +121,6 @@ sub xml {
     if ($type eq 'accepted') { 
         $writer->startTag ('accepted');
         foreach (@$alternate) {
-            warn "A: $_\n";
             $writer->write_elem_or_raw ('alternateInstanceId', $_);
         }
         $writer->dataElement ('notes', $self->string);
@@ -175,10 +175,9 @@ sub populate_accepted {
     my ($self, %args) = @_;
     $self->type ('accepted');
     if (my $obj = $args{'obj'}) {
-        warn "O: $obj\n";
         my $alternate = Remedy::CMDB::Item::AlternateInstanceID->new;
         $alternate->mdrId   ($obj->get ('DatasetId'));
-        $alternate->localId ($obj->get ('RequestId'));
+        $alternate->localId ($obj->get ('InstanceId'));
         $self->alternateId (0, $alternate);
     }
     $self->string ($args{'string'});
