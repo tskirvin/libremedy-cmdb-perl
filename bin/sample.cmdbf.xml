@@ -6,7 +6,6 @@
       <record>
         <computerSystem>
           <AssetClass>Hardware</AssetClass>
-          <firmware_version></firmware_version>
           <HostName>pchg-web1.stanford.edu</HostName>
           <ManufacturerName>Dell Computer Corporation</ManufacturerName>
           <Model>PowerEdge 1750</Model>
@@ -14,6 +13,7 @@
           <PrimaryCapability>Server</PrimaryCapability>
           <SerialNumber>6ZYMF51</SerialNumber>
           <ShortDescription>pchg-web1.stanford.edu</ShortDescription>
+          <firmware_version></firmware_version>
         </computerSystem>
         <recordMetadata>
           <recordId />
