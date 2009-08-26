@@ -1,3 +1,12 @@
-dependency,BMC.CORE:BMC_Dependency
-computerSystem,BMC.CORE:BMC_ComputerSystem
-softwareServer,BMC.CORE:BMC_SoftwareServer
+BMC.CORE:BMC_BaseElement,baseElement                                            
+BMC.CORE:BMC_BaseRelationship,baseRelationship                                  
+BMC.CORE:BMC_Component,component                                                
+BMC.CORE:BMC_ComputerSystem,computerSystem                                      
+BMC.CORE:BMC_Dependency,dependency                                              
+BMC.CORE:BMC_SoftwareServer,softwareServer                                      
++CMDB-InstanceId_Registration,translate                                         
+BMC.CORE:BMC_BusinessService,businessService                                    
+BMC.CORE:BMC_Application,application                                            
+BMC.CORE:BMC_OperatingSystem,operatingSystem                                    
+BMC.CORE:BMC_LANEndpoint,lanEndpoint                                            
+BMC.CORE:BMC_IPEndpoint,ipEndpoint     

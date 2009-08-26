@@ -11,3 +11,6 @@ current:
 
 import:
 	./parse-and-obj < sample-tiny.cmdbf.xml
+
+real:
+	./parse-and-obj < sample.cmdbf.xml

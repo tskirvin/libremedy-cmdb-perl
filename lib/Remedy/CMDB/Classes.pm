@@ -36,6 +36,7 @@ sub read {
         my $status = $csv->parse ($_) || next;
         my ($remedy, @human) = $csv->fields ();
         next unless $remedy;
+        map { s/^\s+|\s+$//g } @human;
         push @human, $remedy;
         my $obj = Remedy::CMDB::Classes::Class->new (
             'remedy'    => $remedy,

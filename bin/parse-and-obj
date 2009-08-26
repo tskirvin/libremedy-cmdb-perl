@@ -79,7 +79,7 @@ our $RESPONSE = Remedy::CMDB::RegisterResponse->new ();
 
 my (@errors) = @_;
 
-my ($item_count, $item_error);
+my ($item_count, $item_error) = (0, 0);
 foreach my $item ($register->items) { 
     $item_count++;
     my $error = $cmdb->register_item ($item, 'response' => $RESPONSE, 

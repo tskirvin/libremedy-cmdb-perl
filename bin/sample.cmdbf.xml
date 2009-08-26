@@ -1,185 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <registerRequest>
   <mdrId>http://puppet.stanford.edu</mdrId>
   <itemList>
     <item>
       <record>
-        <!-- computersystem = BMC_ComputerSystem -->
         <computerSystem>
-          <hostName>smtp01.stanford.edu</hostName>
-          <primaryCapability>server</primaryCapability>
-          <serialNumber>2341234</serialNumber>
+          <AssetClass>Hardware</AssetClass>
+          <firmware_version></firmware_version>
+          <HostName>pchg-web1.stanford.edu</HostName>
+          <ManufacturerName>Dell Computer Corporation</ManufacturerName>
+          <Model>PowerEdge 1750</Model>
+          <Name>pchg-web1.stanford.edu</Name>
+          <PrimaryCapability>Server</PrimaryCapability>
+          <SerialNumber>6ZYMF51</SerialNumber>
+          <ShortDescription>pchg-web1.stanford.edu</ShortDescription>
         </computerSystem>
         <recordMetadata>
-          <recordId>1</recordId>
-        </recordMetadata>
-      </record>
-      <record>
-        <!-- softwareserver = BMC_SoftwareServer -->
-        <softwareServer>
-          <softwareServerType>SMTP</softwareServerType>
-        </softwareServer>
-        <recordMetadata>
-          <recordId>2</recordId>
+          <recordId />
         </recordMetadata>
       </record>
       <instanceId>
         <mdrId>http://puppet.stanford.edu</mdrId>
-        <localId>smtp01.stanford.edu</localId>
+        <localId>6zymf51</localId>
       </instanceId>
     </item>
     <item>
       <record>
-        <!-- computersystem = BMC_ComputerSystem -->
-        <computerSystem>
-          <hostName>smtp02.stanford.edu</hostName>
-          <primaryCapability>server</primaryCapability>
-          <serialNumber>2451342</serialNumber>
-        </computerSystem>
+        <ipEndpoint>
+          <Address>171.67.16.11</Address>
+          <Name>171.67.16.11</Name>
+          <ShortDescription>171.67.16.11</ShortDescription>
+        </ipEndpoint>
         <recordMetadata>
-          <recordId>1</recordId>
-        </recordMetadata>
-      </record>
-      <record>
-        <!-- softwareserver = BMC_SoftwareServer -->
-        <softwareServer>
-          <softwareServerType>SMTP</softwareServerType>
-        </softwareServer>
-        <recordMetadata>
-          <recordId>2</recordId>
+          <recordId />
         </recordMetadata>
       </record>
       <instanceId>
         <mdrId>http://puppet.stanford.edu</mdrId>
-        <localId>smtp02.stanford.edu</localId>
+        <localId>171.67.16.11</localId>
       </instanceId>
     </item>
     <item>
       <record>
-        <!-- computersystem = BMC_ComputerSystem -->
-        <computerSystem>
-          <hostName>smtp03.stanford.edu</hostName>
-          <primaryCapability>server</primaryCapability>
-          <serialNumber>45324523</serialNumber>
-        </computerSystem>
+        <ipEndpoint>
+          <Address>171.67.16.43</Address>
+          <Name>171.67.16.43</Name>
+          <ShortDescription>171.67.16.43</ShortDescription>
+        </ipEndpoint>
         <recordMetadata>
-          <recordId>1</recordId>
-        </recordMetadata>
-      </record>
-      <record>
-        <!-- softwareserver = BMC_SoftwareServer -->
-        <softwareServer>
-          <softwareServerType>SMTP</softwareServerType>
-        </softwareServer>
-        <recordMetadata>
-          <recordId>2</recordId>
+          <recordId />
         </recordMetadata>
       </record>
       <instanceId>
         <mdrId>http://puppet.stanford.edu</mdrId>
-        <localId>smtp03.stanford.edu</localId>
+        <localId>171.67.16.43</localId>
       </instanceId>
     </item>
     <item>
       <record>
-        <!-- computersystem = BMC_ComputerSystem -->
-        <computerSystem>
-          <hostName>zm01.stanford.edu</hostName>
-          <primaryCapability>server</primaryCapability>
-          <serialNumber>2342</serialNumber>
-        </computerSystem>
+        <lanEndpoint>
+          <MACAddress>000f1f698e00</MACAddress>
+          <Name>pchg-web1.stanford.edu 000f1f698e00</Name>
+          <ShortDescription>pchg-web1.stanford.edu 000f1f698e00</ShortDescription>
+        </lanEndpoint>
         <recordMetadata>
-          <recordId>1</recordId>
+          <recordId />
         </recordMetadata>
       </record>
       <instanceId>
         <mdrId>http://puppet.stanford.edu</mdrId>
-        <localId>zm01.stanford.edu</localId>
+        <localId>000f1f698e00</localId>
       </instanceId>
     </item>
     <item>
       <record>
-        <!-- computersystem = BMC_ComputerSystem -->
-        <computerSystem>
-          <hostName>zm02.stanford.edu</hostName>
-          <primaryCapability>server</primaryCapability>
-          <serialNumber>2342</serialNumber>
-        </computerSystem>
+        <lanEndpoint>
+          <MACAddress>000f1f698e01</MACAddress>
+          <Name>pchg-web1.stanford.edu 000f1f698e01</Name>
+          <ShortDescription>pchg-web1.stanford.edu 000f1f698e01</ShortDescription>
+        </lanEndpoint>
         <recordMetadata>
-          <recordId>1</recordId>
+          <recordId />
         </recordMetadata>
       </record>
       <instanceId>
         <mdrId>http://puppet.stanford.edu</mdrId>
-        <localId>zm02.stanford.edu</localId>
+        <localId>000f1f698e01</localId>
       </instanceId>
     </item>
     <item>
       <record>
-        <!-- computersystem = BMC_ComputerSystem -->
-        <computerSystem>
-          <hostName>switch01.stanford.edu</hostName>
-          <primaryCapability>switch</primaryCapability>
-          <serialNumber>2342</serialNumber>
-        </computerSystem>
+        <operatingSystem>
+          <Name>Linux Debian 5.0.1</Name>
+          <OSType>LINUX</OSType>
+          <ShortDescription>Linux Debian 5.0.1</ShortDescription>
+          <SystemName>pchg-web1.stanford.edu</SystemName>
+          <VersionNumber>Debian 5.0.1</VersionNumber>
+        </operatingSystem>
         <recordMetadata>
-          <recordId>1</recordId>
+          <recordId />
         </recordMetadata>
       </record>
       <instanceId>
         <mdrId>http://puppet.stanford.edu</mdrId>
-        <localId>switch01.stanford.edu</localId>
-      </instanceId>
-    </item>
-    <item>
-      <record>
-        <!-- computersystem = BMC_ComputerSystem -->
-        <computerSystem>
-          <hostName>switch02.stanford.edu</hostName>
-          <primaryCapability>switch</primaryCapability>
-          <serialNumber>2342</serialNumber>
-        </computerSystem>
-        <recordMetadata>
-          <recordId>1</recordId>
-        </recordMetadata>
-      </record>
-      <instanceId>
-        <mdrId>http://puppet.stanford.edu</mdrId>
-        <localId>switch02.stanford.edu</localId>
-      </instanceId>
-    </item>
-    <item>
-      <record>
-        <!-- computersystem = BMC_ComputerSystem -->
-        <computerSystem>
-          <hostName>router01.stanford.edu</hostName>
-          <primaryCapability>router</primaryCapability>
-          <serialNumber>2342</serialNumber>
-        </computerSystem>
-        <recordMetadata>
-          <recordId>1</recordId>
-        </recordMetadata>
-      </record>
-      <instanceId>
-        <mdrId>http://puppet.stanford.edu</mdrId>
-        <localId>router01.stanford.edu</localId>
-      </instanceId>
-    </item>
-    <item>
-      <record>
-        <!-- computersystem = BMC_ComputerSystem -->
-        <computerSystem>
-          <hostName>router02.stanford.edu</hostName>
-          <primaryCapability>router</primaryCapability>
-          <serialNumber>2342</serialNumber>
-        </computerSystem>
-        <recordMetadata>
-          <recordId>1</recordId>
-        </recordMetadata>
-      </record>
-      <instanceId>
-        <mdrId>http://puppet.stanford.edu</mdrId>
-        <localId>router02.stanford.edu</localId>
+        <localId>os-pchg-web1.stanford.edu</localId>
       </instanceId>
     </item>
   </itemList>
+  <relationshipList>
+    <relationship>
+      <source>
+        <mdrId>http://puppet.stanford.edu</mdrId>
+        <localId>6zymf51</localId>
+      </source>
+      <target>
+        <mdrId>http://puppet.stanford.edu</mdrId>
+        <localId>171.67.16.11</localId>
+      </target>
+      <record>
+        <hostedAccessPoint>
+          <Description>pchg-web1.stanford.edu => 171.67.16.11</Description>
+          <Name>accesses-network-over</Name>
+          <ShortDescription>accesses-network-over</ShortDescription>
+        </hostedAccessPoint>
+        <recordMetadata>
+          <recordId />
+        </recordMetadata>
+      </record>
+      <instanceId>
+        <mdrId>http://puppet.stanford.edu</mdrId>
+        <localId>6zymf51=>171.67.16.11</localId>
+      </instanceId>
+    </relationship>
+    <relationship>
+      <source>
+        <mdrId>http://puppet.stanford.edu</mdrId>
+        <localId>6zymf51</localId>
+      </source>
+      <target>
+        <mdrId>http://puppet.stanford.edu</mdrId>
+        <localId>171.67.16.43</localId>
+      </target>
+      <record>
+        <hostedAccessPoint>
+          <Description>pchg-web1.stanford.edu => 171.67.16.43</Description>
+          <Name>accesses-network-over</Name>
+          <ShortDescription>accesses-network-over</ShortDescription>
+        </hostedAccessPoint>
+        <recordMetadata>
+          <recordId />
+        </recordMetadata>
+      </record>
+      <instanceId>
+        <mdrId>http://puppet.stanford.edu</mdrId>
+        <localId>6zymf51=>171.67.16.43</localId>
+      </instanceId>
+    </relationship>
+    <relationship>
+      <source>
+        <mdrId>http://puppet.stanford.edu</mdrId>
+        <localId>6zymf51</localId>
+      </source>
+      <target>
+        <mdrId>http://puppet.stanford.edu</mdrId>
+        <localId>000f1f698e00</localId>
+      </target>
+      <record>
+        <hostedAccessPoint>
+          <Description>pchg-web1.stanford.edu => 000f1f698e00</Description>
+          <Name>accesses-network-over</Name>
+          <ShortDescription>accesses-network-over</ShortDescription>
+        </hostedAccessPoint>
+        <recordMetadata>
+          <recordId />
+        </recordMetadata>
+      </record>
+      <instanceId>
+        <mdrId>http://puppet.stanford.edu</mdrId>
+        <localId>6zymf51=>000f1f698e00</localId>
+      </instanceId>
+    </relationship>
+    <relationship>
+      <source>
+        <mdrId>http://puppet.stanford.edu</mdrId>
+        <localId>6zymf51</localId>
+      </source>
+      <target>
+        <mdrId>http://puppet.stanford.edu</mdrId>
+        <localId>000f1f698e01</localId>
+      </target>
+      <record>
+        <hostedAccessPoint>
+          <Description>pchg-web1.stanford.edu => 000f1f698e01</Description>
+          <Name>accesses-network-over</Name>
+          <ShortDescription>accesses-network-over</ShortDescription>
+        </hostedAccessPoint>
+        <recordMetadata>
+          <recordId />
+        </recordMetadata>
+      </record>
+      <instanceId>
+        <mdrId>http://puppet.stanford.edu</mdrId>
+        <localId>6zymf51=>000f1f698e01</localId>
+      </instanceId>
+    </relationship>
+    <relationship>
+      <source>
+        <mdrId>http://puppet.stanford.edu</mdrId>
+        <localId>6zymf51</localId>
+      </source>
+      <target>
+        <mdrId>http://puppet.stanford.edu</mdrId>
+        <localId>os-pchg-web1.stanford.edu</localId>
+      </target>
+      <record>
+        <hostedSystemComponent>
+          <Description>pchg-web1.stanford.edu => Linux Debian 5.0.1</Description>
+          <Name>runs-operating-system</Name>
+          <ShortDescription>runs-operating-system</ShortDescription>
+        </hostedSystemComponent>
+        <recordMetadata>
+          <recordId />
+        </recordMetadata>
+      </record>
+      <instanceId>
+        <mdrId>http://puppet.stanford.edu</mdrId>
+        <localId>pchg-web1.stanford.edu=>Debian 5.0.1</localId>
+      </instanceId>
+    </relationship>
+  </relationshipList>
 </registerRequest>
+
