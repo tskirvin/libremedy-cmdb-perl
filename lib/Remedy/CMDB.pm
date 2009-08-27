@@ -101,7 +101,8 @@ sub register_item {
     my $mdrId    = $item->mdrId    or return 'no mdrId';
     my $record   = $item->record   or return 'no record';
 
-    my $externalId = join ('@', $localId, $mdrId);
+    # TODO: this should be a function somewhere
+    my $externalId = time . join ('@', $localId, $mdrId);
 
     my $data = $record->data or return 'no record data';
 
@@ -167,6 +168,7 @@ sub register_item {
         $logger->debug ("registering translation table entry for '$name'");
         my $instanceid = $obj->get ('InstanceId')
             or return "could not find instance ID after saving";
+        # TODO: hey, we're still doing this!
         if (my $translate_error = $self->register_translation ($item,
             $instanceid)) {
             $logger->info ($translate_error);
@@ -174,6 +176,8 @@ sub register_item {
         }
 
     }
+
+    # TODO: we actually want register_translation right now.
 
     $response->add_accepted ($item, $string, 'obj' => $obj);
     return;
