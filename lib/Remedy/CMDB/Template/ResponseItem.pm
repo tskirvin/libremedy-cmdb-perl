@@ -1,10 +1,14 @@
-package Remedy::CMDB::InstanceResponse;
+package Remedy::CMDB::Template::ResponseItem;
 our $VERSION = "0.01.01";
 # Copyright and license are in the documentation below.
 
 =head1 NAME
 
+Remedy::CMDB::Template::Response - template for XML responses to activities
+
 =head1 SYNOPSIS
+
+    use Remedy::CMDB::Template::Response;
 
 =head1 DESCRIPTION
 
@@ -39,8 +43,7 @@ our @ISA = init_struct (__PACKAGE__);
 =cut
 
 sub fields {
-    # 'instanceId'  => 'Remedy::CMDB::Item::InstanceID',
-    'instanceId'  => '$',
+    'source_data' => '$',
     'string'      => '$',
     'type'        => '$',
     'alternateId' => '@',
@@ -53,7 +56,7 @@ sub fields {
 sub populate_xml {
     my ($self, $xml) = @_;
     return 'no xml' unless ($xml && ref $xml);
-    return 'tag type should be instanceResponse'
+    return 'tag type should be '
         unless ($xml->tag eq 'instanceResponse');
 
     $self->clear_object;
@@ -112,8 +115,12 @@ sub xml {
 
     $writer->startTag ($self->tag_type);
     
-    my $id = $self->instanceId;
-    $writer->write_elem_or_raw ('instanceId', $self->instanceId);
+    my $src_data = $self->source_data || '';
+    if (ref $src_data) { 
+        $writer->write_raw_with_format ($src_data->xml);
+    } else {
+        $writer->write_elem_or_raw ('dataSource', $src_data);
+    }
 
     my $alternate = $self->alternateId;
 
@@ -124,7 +131,6 @@ sub xml {
             $writer->write_elem_or_raw ('alternateInstanceId', $_);
         }
         $writer->dataElement ('notes', $self->string);
-        # write out the alternateInstanceId
         $writer->endTag;
     } elsif ($type eq 'declined') {
         $writer->startTag ('declined');
@@ -150,15 +156,22 @@ sub populate {
     my ($self, %args) = @_;
     return 'no item' unless my $item = $args{'item'};
 
-    my $id = ref $item ? $item->instanceId 
-                       : 'GLOBAL';
-    $self->instanceId ($id);
+    my $data = ref $item ? $item->source_data : 'GLOBAL';
+    $self->source_data ($data);
 
     my $type = $args{'type'} || 'default';
     if    ($type eq 'accepted') { return $self->populate_accepted (%args) }
     elsif ($type eq 'declined') { return $self->populate_declined (%args) }
     elsif ($type eq 'error')    { return $self->populate_error    (%args) }
     else                        { return "invalid type: $type" }
+}
+
+sub clear_object {
+    my ($self) = @_;
+    $self->alternateId ([]);
+    $self->source_data (undef);
+    $self->string      (undef);
+    return;
 }
 
 =item populate_accepted (ARGHASH)
@@ -198,19 +211,23 @@ sub populate_error {
     return;
 }
 
-sub clear_object {
-    my ($self) = @_;
-    $self->alternateId ([]);
-    $self->instanceId  (undef);
-    $self->string      (undef);
-    return;
-}
-
 ##############################################################################
-### 
+### Stubs ####################################################################
 ##############################################################################
 
-sub tag_type { 'instanceResponse' }
+=head2 Stubs
+
+These functions are stubs; the real work is implemented by the sub-functions.
+
+=over 4
+
+=item tag_type
+
+=back
+
+=cut
+
+sub tag_type { 'not implemented' }
 
 =back
 

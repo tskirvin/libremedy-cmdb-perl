@@ -15,7 +15,7 @@ our $VERSION = "0.01.01";
 ##############################################################################
 
 our $SOCKET   = "/tmp/cmdb";
-our $MAXCONN  = 10;  
+our $MAXCONN  = 32;  
 our $PROTOCOL = SOCK_DGRAM; 
 
 our $NEWLINE = "\r\n";
@@ -88,17 +88,13 @@ sub connect {
     return $self;
 }
 
-sub process {
-    my ($self, $client, $line) = @_;
-    
-    print $client $line;
-    return;
-}
-
 sub server_open {
-    my ($self, $file) = @_;
+    my ($self, $file, %args) = @_;
     my $logger = $self->logger_or_die;
     $logger->logdie ("no file to write a socket to") unless $file;
+
+    my $max = defined $args{'maxconn'} ? $args{'maxconn'} 
+                                       : $MAXCONN;
 
     $self->server_close;
     if (-e $file) { 
@@ -107,12 +103,9 @@ sub server_open {
     }
     $logger->all ("opening socket at $file");
 
-    my $server = IO::Socket::UNIX->new ('Local' => $file,
-        Type => SOCK_STREAM, 'Listen' => 1) 
-        or die "failed to open socket: $@\n";
+    my $server = IO::Socket::UNIX->new ('Local' => $file, Type => SOCK_STREAM, 
+        'Listen' => $max) or die "failed to open socket: $@\n";
     $logger->all ("listening at $file");
-
-    # may want to set permissions here
 
     $self->socket   ($server);
     $self->socketfile ($file);
@@ -120,20 +113,29 @@ sub server_open {
     return $self->socket;
 }
 
+sub socket_close {
+    my ($self) = @_;
+    if (my $socket = $self->socket) { close $socket }
+}
+
 sub server_close {
     my ($self) = @_;
     my $logger = $self->logger_or_die;
-    if (my $socket = $self->socket) {
-        if (my $file = $self->socketfile) {
-            $logger->warn ("removing file $file");
+
+    if (my $file = $self->socketfile) {
+        if (-e $file) { 
+            $logger->warn ("removing socket '$file'");
             unlink $file if -e $file;
         }
+    }
 
+    $self->socketfile ('');
+    if (my $socket = $self->socket) {
         $logger->warn ("closing socket");
-        $self->socket     ('');
-        $self->socketfile ('');
+        $self->socket ('');
         return close $socket;
     } 
+
     return;
 }
 
@@ -145,8 +147,10 @@ sub disconnect {
 }
 
 sub process {
-    my ($self, @xml) = @_;
-    return @xml;
+    my ($self, $client, @xml) = @_;
+    # should actually parse the XML, and see what script to run it through
+    my @reverse = reverse @xml;
+    return @reverse;
 }
 
 # eventually, we'll keep the logger in the object, but not yet

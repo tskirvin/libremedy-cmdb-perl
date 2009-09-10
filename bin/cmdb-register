@@ -3,6 +3,8 @@
 
 =head1 NAME
 
+cmdb-register - takes XML on STDIN, and sends it to the CDMB daemon
+
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
@@ -57,41 +59,22 @@ exit_error ('bad command-line options') unless $result;
 
 # just make sure the XML is good
 my $twig = XML::Twig->new;
-$twig->safe_parse (join ('', <STDIN>)) || exit_error ('bad XML on input');
+$twig->safe_parse (join ('', <STDIN>)) || exit_error ('bad input XML');
+    # TODO: should this really be a <registerResponse>?
+
+
+my $string = create_xml_string ($twig);
+
+$SIG{ALRM} = sub { exit_error ("$0: timeout ($ALARM seconds)") };
+alarm $ALARM;
 
 my $client = eval { Remedy::CMDB::Client->connect ('DEBUG' => $DEBUG) }
     or exit_error ("couldn't connect to CMDB: $@\n");
 
 my $socket = $client->socket;
-
-my $string;
-my $writer = XML::Writer::Raw->new ('OUTPUT' => \$string, 'DATA_INDENT' => 4,
-    'NEWLINES' => 0, 'DATA_MODE' => 1, 'UNSAFE' => 1);
-$writer->startTag ('cmdb-client');
-
-$writer->startTag ('environment');
-foreach my $key (sort keys %ENV) {
-    $writer->dataElement ($key, $ENV{$key});
-}
-$writer->endTag;
-
-$writer->startTag ('request');
-$writer->write_raw_with_format ($twig->sprint ('pretty_print' => 'indented_a'));
-$writer->endTag;
-
-$writer->endTag;
-$writer->end;
-
 print $socket $string;
-
-$SIG{ALRM} = sub { exit_error ("Submission time of $ALARM seconds exceeded") };
-alarm $ALARM;
-
-while (<$socket>) { 
-    print;
-    last if /^<\/registerResponse>$/;
-}
-
+$socket->shutdown (1);  # no more writing
+while (<$socket>) { print }
 $socket->close;
 
 exit 0;
@@ -99,6 +82,34 @@ exit 0;
 ##############################################################################
 ### Subroutines ##############################################################
 ##############################################################################
+
+### create_xml_string
+# Given an XML::Twig, creates and returns a string containing a full
+# 'cmdb-client' XML fragment.  Uses XML::Writer::Raw.
+sub create_xml_string {
+    my ($twig) = @_;
+    my $string;
+    my $writer = XML::Writer::Raw->new ('OUTPUT' => \$string, 
+        'DATA_INDENT' => 4, 'NEWLINES' => 0, 'DATA_MODE' => 1, 'UNSAFE' => 1);
+    $writer->startTag ('cmdb-client');
+    { 
+        $writer->startTag ('environment');
+        foreach my $key (sort keys %ENV) {
+            $writer->dataElement ($key, $ENV{$key});
+        }
+        $writer->endTag;
+
+        my %args = ('pretty_print' => 'indented');  # was indented_a
+        $writer->startTag ('request');
+        $writer->write_raw_with_format ($twig->sprint (%args));
+        $writer->endTag;
+
+    } 
+    $writer->endTag;
+    $writer->end;
+
+    return $string;
+}
 
 ###############################################################################
 ### Documentation #############################################################

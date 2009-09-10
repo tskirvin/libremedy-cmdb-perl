@@ -101,12 +101,12 @@ sub register_item {
     my $mdrId    = $item->mdrId    or return 'no mdrId';
     my $record   = $item->record   or return 'no record';
 
+    return 'mdrId does not match parent mdrId' unless $mdrId eq $mdr_parent;
+
     # TODO: this should be a function somewhere
-    my $externalId = time . join ('@', $localId, $mdrId);
+    my $externalId = join ('.', time, join ('@', $localId, $mdrId));
 
     my $data = $record->data or return 'no record data';
-
-    return 'mdrId does not match parent mdrId' unless $mdrId eq $mdr_parent;
 
     my $class = $self->translate_class ($datatype) 
         or return "invalid class: $datatype";
@@ -200,7 +200,7 @@ sub register_item {
 sub register_relationship {
     my ($self, $relationship, %args) = @_;
 
-    return 'not currently working';
+    # return 'not currently working';
 
     ## Make sure we have all of the necessary bits about the relationship
     return 'no relationship' unless ($relationship && ref $relationship);
@@ -225,15 +225,91 @@ sub register_relationship {
     my $baseclass = $self->translate_class ('baseElement')
         or return "invalid class: baseElement";
 
-    my $source_item = $self->find_item ($source, $baseclass, 
+    my $data = $record->data or return 'no record data';
+
+    my $src_item = $self->find_item ($source, $baseclass, 
         'mdr_parent' => $mdr_parent) or return "source does not exist"; 
-    my $target_item = $self->find_item ($target, $baseclass, 
+    my $tgt_item = $self->find_item ($target, $baseclass, 
         'mdr_parent' => $mdr_parent) or return "target does not exist"; 
         
     my $class = $self->translate_class ($datatype) 
         or return "invalid class: $datatype";
-    
+
+    my @changes;
+
+    my $obj;
+    my @obj = $self->find_relationship ($relationship, $class);
+    if (! scalar @obj) { 
+        $logger->debug ("creating new relationship in '$dataset'");
+        $obj = $self->create ($class);
+        $obj->set ('Source.DatasetId'       => $dataset);
+        $obj->set ('Source.InstanceId'      => $src_item->get ('InstanceID'));
+        $obj->set ('Destination.DatasetId'  => $dataset);
+        $obj->set ('Destination.InstanceId' => $tgt_item->get ('InstanceID'));
+        push @changes, "new relationship";
+    } elsif (scalar @obj > 1) { 
+        return 'too many relationships found';
+    } else {
+        $logger->debug ("found existing relationship in '$dataset'");
+        $obj = $obj[0];
+    }
+
+    my $name = join (' -> ', $obj->get ('Source.InstanceId'),
+        $obj->get ('Destination.InstanceId'));
+
+    my @fields;
+    foreach my $key (sort keys %{$data}) {
+        if ($key eq 'DatasetId') {
+            $logger->debug ("skipping key $key");
+            next;
+        } elsif ($key eq 'InstanceId') {
+            $logger->debug ("key $key should not be written to from here");
+            return "tried to write to $key";
+        }
+        return "$datatype: '$key' is invalid" unless $obj->validate ($key);
+        my $value = $$data{$key} || '';
+        my $orig  = $obj->get ($key);
+        if (defined $orig && $value eq $orig) {
+            $logger->all (sprintf ("%20.20s: no change", $key));
+        } else {
+            $logger->all (sprintf ("%20.20s: set to '%s'", $key, $value));
+            $obj->set ($key, $value);
+            push @fields, $key;
+        }
+    }
+
+    push @changes, "updated " . join (", ", @fields) if scalar @fields;
+    my $string = join ('; ', @changes) || 'no changes';
+
+    $logger->info ("$name: $string");
+
+    if (scalar @changes) {
+        $logger->debug ("saving entry for '$name'");
+
+        ## for some reason, we're getting errors on save that aren't... real.
+        if (my $error = $obj->save) {
+            my $sess_error = $session->error;
+            my $full_error = join ('', $error, $sess_error);
+            return $full_error;
+        }
+        $logger->debug ("registering translation table entry for '$name'");
+        my $instanceid = $obj->get ('InstanceId')
+            or return "could not find instance ID after saving";
+        # TODO: hey, we're still doing this!
+        if (my $translate_error = $self->register_translation ($relationship,
+            $instanceid)) {
+            $logger->info ($translate_error);
+            return $translate_error;
+        }
+
+    }
+
+    # TODO: we actually want register_translation right now.
+
+    $response->add_accepted ($relationship, $string, 'obj' => $obj);
     return;
+
+
 }
 
 =item find_item (ITEM, CLASS, ARGHASH)
@@ -262,6 +338,39 @@ sub find_item {
     my $string = "$instanceid in $translate";
     $logger->debug ("searching for $string in $class");
     my @items = $self->read ($translate, {'InstanceId' => $instanceid});
+    if (scalar @items == 0) {
+        $logger->debug ("no matches for $string");
+        return;
+    } 
+
+    return wantarray ? @items : $items[0];
+}
+
+sub find_relationship {
+    my ($self, $relationship, $class, %args) = @_;
+    my $logger  = $self->logger_or_die ('no logger at item registration');
+    my $remedy  = $self->remedy_or_die ('no remedy at item registration');
+    my $session = $remedy->session_or_die ('no remedy session');
+
+    ## Make sure we have the information out of $item that we'll need.
+    my $source = $relationship->source or return;
+    my $target = $relationship->target or return;
+
+    my $src_name = $source->text;
+    my $tar_name = $target->text;
+
+    my %match = ('Source.DatesetId'       => $source->mdrId,
+                 'Source.InstanceId'      => $source->localId,
+                 'Destination.DatasetId'  => $target->mdrId,
+                 'Destination.InstanceId' => $target->localId);
+
+    ## What class are we going to be searching?
+    $class ||= 'baseRelationship';
+    return unless my $translate = $class = $self->translate_class ($class);
+
+    my $string = "relationship between $src_name and $tar_name";
+    $logger->debug ("searching for $string");
+    my @items = $self->read ($translate, {%match});
     if (scalar @items == 0) {
         $logger->debug ("no matches for $string");
         return;
@@ -307,6 +416,8 @@ sub translate_instanceid_to_mdr {
     my $remedy  = $self->remedy_or_die ('no remedy at item registration');
     my $session = $remedy->session_or_die ('no remedy session');
 
+    $logger->debug ("translate_instanceid_to_mdr ($instanceid)");
+
     unless ($instanceid) { 
         $logger->warn ('no instanceid offered');
         return;
@@ -329,7 +440,7 @@ sub translate_instanceid_to_mdr {
 
     my $entry = $translate[0];
 
-    return ($entry->get ('MDR ID'), $entry->get ('Local ID'));
+    return ($entry->get ('mdrId'), $entry->get ('localId'));
 }
 
 sub translate_mdr_to_instanceid {
@@ -337,6 +448,8 @@ sub translate_mdr_to_instanceid {
     my $logger  = $self->logger_or_die ('no logger at item registration');
     my $remedy  = $self->remedy_or_die ('no remedy at item registration');
     my $session = $remedy->session_or_die ('no remedy session');
+
+    $logger->debug ("translate_mdr_to_instanceid ($mdr, $local)");
 
     my $class = $self->translate_class ('translate') or return;
 
@@ -354,7 +467,7 @@ sub translate_mdr_to_instanceid {
     } 
 
     my $entry = $translate[0];
-    return $entry->get ('CI Instance ID');
+    return $entry->get ('Internal Instance Id');
 }
 
 

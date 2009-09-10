@@ -94,7 +94,6 @@
           <Name>Linux Debian 5.0.1</Name>
           <OSType>LINUX</OSType>
           <ShortDescription>Linux Debian 5.0.1</ShortDescription>
-          <SystemName>pchg-web1.stanford.edu</SystemName>
           <VersionNumber>Debian 5.0.1</VersionNumber>
         </operatingSystem>
         <recordMetadata>

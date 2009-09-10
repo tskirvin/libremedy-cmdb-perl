@@ -21,8 +21,9 @@ use strict;
 use Getopt::Long;
 use Lingua::EN::Inflect qw/inflect/;
 use Pod::Usage;
+use Remedy::CMDB::Global;
 use Remedy::CMDB::Register;
-use Remedy::CMDB::RegisterResponse;
+use Remedy::CMDB::Register::Response;
 use Remedy::CMDB;
 
 $0 =~ s%.*/%%g;     # Lose the annoying path information
@@ -75,7 +76,7 @@ my $cmdb = eval { Remedy::CMDB->connect ('config' => $config) }
 exit_error ($@) if $@;
 
 ## Start creating the response now
-our $RESPONSE = Remedy::CMDB::RegisterResponse->new ();
+our $RESPONSE = Remedy::CMDB::Register::Response->new ();
 
 my (@errors) = @_;
 
@@ -102,6 +103,7 @@ foreach my $relate ($register->relationships) {
     }
 }
 
+## 
 $LOGGER->info (sprintf ("%s out of %s", 
     inflect ("NUM($item_error) PL_N(error)"),
     inflect ("NUM($item_count) PL_N(item)")));
@@ -109,25 +111,19 @@ $LOGGER->info (sprintf ("%s out of %s",
     inflect ("NUM($relate_error) PL_N(error)"),
     inflect ("NUM($relate_count) PL_N(relationship)")));
 
-exit_response ($RESPONSE);
+exit_response ();
 
 ##############################################################################
 ### Subroutines ##############################################################
 ##############################################################################
 
-sub exit_response {
-    my ($response, %args) = @_;
-    print scalar $response->xml;
-    exit defined $args{'FATAL'} ? 1 : 0;
+sub exit_error { 
+    my ($error) = @_;
+    $LOGGER->fatal ($error);
+    Remedy::CMDB::Register::Response->exit_error ($error)
 }
 
-sub exit_error {
-    my ($text, %args) = @_;
-    $LOGGER->fatal ($text);
-    my $response = Remedy::CMDB::RegisterResponse->new ();
-    $response->add_error ('global', $text);
-    exit_response ($response, 'FATAL' => 1, %args);
-}
+sub exit_response { $RESPONSE->exit_response (@_) }
 
 sub error_usage {
     my ($error) = @_;

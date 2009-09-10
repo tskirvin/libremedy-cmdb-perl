@@ -79,16 +79,22 @@ sub client_open {
     my $timeout = $self->timeout;
     my $client = IO::Socket::UNIX->new ('Peer' => $file,
         Type => SOCK_STREAM, 'Timeout' => $self->timeout) 
-        or $logger->logdie ("couldn't read from socket: $@");
+        or $logger->logdie ("socket open failed: $@\n");
     $logger->warn ("talking to $file");
+
+    ## get initial text and write it to debug
+    # while (<$client>) { 
+        # $logger->warn ($_);
+    # }
 
     $self->socket   ($client);
     $self->socketfile ($file);
     return $self->socket;
 }
 
-sub server_close {
-    my ($self) = @_;
+sub client_close {
+    my ($self, $level) = @_;
+    $level ||= 2;
     my $logger = $self->logger_or_die;
     if (my $socket = $self->socket) {
         $logger->warn ("closing socket");

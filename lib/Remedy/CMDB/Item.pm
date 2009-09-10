@@ -23,6 +23,8 @@ use warnings;
 
 use Remedy::CMDB::Item::Record;
 use Remedy::CMDB::Item::InstanceID;
+use Remedy::CMDB::Item::DataSource;
+use Remedy::CMDB::Item::Response;
 
 use Remedy::CMDB::Struct qw/init_struct/;
 our @ISA = init_struct (__PACKAGE__);
@@ -45,6 +47,15 @@ sub fields {
     'instanceId' => 'Remedy::CMDB::Item::InstanceID',
     'record'     => '$',
 }
+
+sub source_data {
+    my ($self) = @_;
+    my $src = Remedy::CMDB::Item::DataSource->new ('instanceId' => 
+        $self->instanceId);
+    return $src;
+}
+
+sub response { shift; Remedy::CMDB::Item::Response->new (@_) }
 
 sub datatype { shift->record->datatype }
 

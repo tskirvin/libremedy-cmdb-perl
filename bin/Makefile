@@ -10,7 +10,13 @@ current:
 	${REM_HOME}/bin/remedy-dump "BMC.CORE:BMC_BaseElement"
 
 import:
-	./parse-and-obj < sample-tiny.cmdbf.xml
+	./cmdb-submit < sample-tiny.cmdbf.xml
 
 real:
-	./parse-and-obj < sample.cmdbf.xml
+	./cmdb-submit < sample.cmdbf.xml
+
+server:
+	./cmdb-server
+
+client:
+	./cmdb-register < sample-tiny.cmdbf.xml

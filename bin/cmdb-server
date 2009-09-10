@@ -25,7 +25,7 @@ our $DEBUG = 5;
 
 ## How many children should we allow running at a time?  This also works
 ## out to the maximum number of processes.
-our $KIDS_MAX = 1;
+our $KIDS_MAX = 5;
 
 ## How long should it take before a connection times out?  This should be
 ## set to slightly below the lower-bound of the timeouts of any of the
@@ -33,6 +33,8 @@ our $KIDS_MAX = 1;
 our $TIMEOUT = 10;
 
 our $ALARM = 15;
+
+our $MAX_RETRY = 10;
 
 ##############################################################################
 ### Declarations #############################################################
@@ -44,6 +46,7 @@ use warnings;
 use Getopt::Long;
 use Remedy::CMDB::Config;
 use Remedy::CMDB::Server;
+use IO::Socket;
 
 use POSIX qw(:sys_wait_h :signal_h :errno_h);
 
@@ -72,70 +75,56 @@ my $logger = $server->logger_or_die;
 
 $logger->debug ("server is listening");
 
-our $count = 0;
+our $count    = 0;
 our $CHILDREN = 0;
+
+my $socket = $server->socket;
+
 # Accept and process the connections
-while (my $client = $server->socket->accept) {
-    next unless defined fileno ($client);		# Socket not open -> stop
+
+while (1) { 
+    my $client = $server->socket->accept;
+    next unless $client && defined fileno $client;
+    while ($CHILDREN >= $KIDS_MAX) { sleep 1 }  # Only allow $MAXKIDS servers
     $count++;
-    if ($CHILDREN >= $KIDS_MAX) {
-        print $client "too many clients connected\n";
-        close $client;
-        next;
-    } # Only allow $KIDS_MAX servers
 
-    $logger->info ("accepted connection ($client)");
+    $logger->info ("accepting connection ($count)");
 
-    # Fork off more clients; if we're above $KIDS_MAX, though, wait for a
-    # while and try again.  (This ought to have a real timeout, I guess)
-    unless (my $pid = _fork ($client)) {
-        next unless defined $pid;
+    my $pid = fork_client ($client);
+    if ($pid) {
         $CHILDREN++;
-        $logger->info  ("connection $count established");
-        $logger->debug ("forked off client $pid: $CHILDREN\n");
+        my $string = sprintf ('forked item %d (pid %d)', $count, $pid);
+        $logger->debug ($string);
         next;
-    }
+    } 
 
-    select ($client);
+    $server->socket_close;
+    $logger->info  ("connection $count established");
 
-    $SIG{ALRM} = sub { exit_error ("Submission time of $ALARM seconds exceeded") }; 
+    $SIG{ALRM} = sub { exit_error ("submit time of $ALARM secs exceeded") }; 
     alarm $ALARM;
 
     my @input;
     while (my $line = <$client>) { 
-        warn "L: $line\n";
-        last if ($line =~ /^<\/cmdb-client>$/);
         push @input, $line;
+        last if ($line =~ /^<\/cmdb-client>$/);
+        last if ($line eq '.');
     }
-    warn "I: @input\n";
-    my @return = $server->process (@input);
-    foreach (@return) { print $client $_ }
+    $client->shutdown (0);  # no more reading
 
-    exit 0;
+    my @return = $server->process ($client, @input);
+    foreach (@return) { 
+        print $client $_ 
+    }
 
-    # Central loop - every time there's input, do something with it.
-    # my $time = time;
+    $client->shutdown (2);  # no more writing either
 
-#    while (<$client>) {
-#        if (time - $TIMEOUT > $time) {
-#            $logger->debug ("connection timed out");
-#            last;
-#        } else {
-#            $time = time
-#        }
-#        chomp;
-#        print $_;
-#        next unless (defined ($_) && $_ =~ /\S/);
-#        last unless defined fileno ($client);	# Socket not open -> stop
-#        $server->process ($client, $_) || last;
-#    }
-
-    # Close up and exit.
-    close $client;
-    select (\*STDOUT);
+    $client->flush;
+    $client->close;
     exit 0;
 }
 
+$logger->warn ("$CHILDREN children still open");
 $server->server_close;
 exit 0;
 
@@ -143,37 +132,50 @@ exit 0;
 ### Functions #################################################################
 ###############################################################################
 
-### _fork ( FILEHANDLE )
-# Just the fork code.
-sub _fork {
-    my ($fh) = @_;
-    return unless $fh && defined fileno ($fh);
-    if (my $pid = fork) {    # Success, and we're the parent:
-        close $fh;           #   close the fh, return 0, wait for next call
-        return 0;
-    } elsif (defined $pid) { # Success, and we're a child:
-        return 1;            #   return something, so we can keep going
-    } elsif ($! == EAGAIN) { # Retry - this is the "do again" thing
-        sleep 3;
-        return _fork ($fh);
-    } else {
-        die "Cannot fork: $!\n";
-        return;
-    }
+### fork_client (FH[, COUNT])
+# Wraps fork ().  Takes an open filehandle FH, and an optional count.  On
+# success, returns the valid PID to the child, and 0 to the parent.  Dies on
+# failure.  $LOGGER must exist. 
+# We do have a retry mechanism if the forking has a small error.
+sub fork_client {
+    my ($fh, $count) = @_;
+    $count ||= 0;
+    return unless $fh && defined fileno $fh;
+
+    $LOGGER->logdie ("fork: too many retries ($count)") if $count > $MAX_RETRY;
+
+    my $pid = fork;
+    ## Success, and we're the parent: close the filehandle, and return
+    if    ($pid)         { close $fh && return $pid } 
+
+    ## Success, and we're the child: return the pid
+    elsif (defined $pid) { return 0 }
+
+    ## Error, but it's a 'do again'; so let's wait a second and do so.
+    elsif ($! == EAGAIN) { sleep 1 && return fork_client ($fh, ++$count) }
+    
+    ## fork error
+    else                 { $LOGGER->logdie ("fork error: $!\n"); }
 }
 
 ### reaper (PID)
 # Takes care of cleaning up the children processes.
 sub reaper {
-    my $kid = waitpid (-1, WNOHANG);
-    if ($kid == -1) { 		    # no child waiting; ignore
-    } elsif (WIFEXITED ($?)) {	# process exited
+    my $child = waitpid (-1, WNOHANG);
+
+    ## no child waiting; ignore.
+    if    ($child == -1) { return }
+    
+    ## the process exited; 
+    elsif (WIFEXITED ($?)) { 
         $CHILDREN--;
-        $LOGGER->debug ("Client reaped, $CHILDREN remain");
-        reaper ();			# Make sure there's no more left
-    } else {
-        return                  # False alarm; ignore
+        $LOGGER->debug ("reaped $child" . ($? ? " with exit $?" : ''));
+        reaper ();
+        $SIG{CHLD} = \&reaper;
     }
+
+    ## false alarm; ignore.
+    else                   { return }
 }
 
 
