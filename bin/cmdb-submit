@@ -1,4 +1,4 @@
-#!/usr/bin/perl -T
+#!/usr/bin/perl
 
 ##############################################################################
 ### Configuration ############################################################
@@ -9,7 +9,7 @@ use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-perl/lib";
 use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib";
 
 ## Print debugging information?  Set with '--debug', can be set many times
-our $DEBUG = 5;
+our $DEBUG = 2;
 
 ##############################################################################
 ### Declarations #############################################################
@@ -78,44 +78,54 @@ exit_error ($@) if $@;
 ## Start creating the response now
 our $RESPONSE = Remedy::CMDB::Register::Response->new ();
 
-my (@errors) = @_;
+## Register all items
+$LOGGER->debug ('registering items');
+register ($cmdb, [$register->items], 'type' => 'item', 
+    'response' => $RESPONSE, 'dataset' => $dataset, 'mdr' => $mdr_parent);
 
-my ($item_count, $item_error) = (0, 0);
-foreach my $item ($register->items) { 
-    $item_count++;
-    my $error = $cmdb->register_item ($item, 'response' => $RESPONSE, 
-        'dataset' => $dataset, 'mdr_parent' => $mdr_parent);
-    if ($error) { 
-        $RESPONSE->add_declined ($item, $error) if $error;
-        $item_error++;
-    }
-}
+$LOGGER->debug ('registering relationships');
+register ($cmdb, [$register->relationships], 'type' => 'relationship',
+    'response' => $RESPONSE, 'dataset' => $dataset, 'mdr' => $mdr_parent);
 
-# then relationships w/register_relationship
-my ($relate_count, $relate_error);
-foreach my $relate ($register->relationships) {
-    $relate_count++;
-    my $error = $cmdb->register_relationship ($relate, 'response' => $RESPONSE, 
-        'dataset' => $dataset, 'mdr_parent' => $mdr_parent);
-    if ($error) {
-        $RESPONSE->add_declined ($relate, $error) if $error;
-        $relate_error++;
-    }
-}
+## TODO: ...and then, deregistration.
+$LOGGER->debug ('registering deregistrations');
 
-## 
-$LOGGER->info (sprintf ("%s out of %s", 
-    inflect ("NUM($item_error) PL_N(error)"),
-    inflect ("NUM($item_count) PL_N(item)")));
-$LOGGER->info (sprintf ("%s out of %s", 
-    inflect ("NUM($relate_error) PL_N(error)"),
-    inflect ("NUM($relate_count) PL_N(relationship)")));
+#my ($item_count, $item_error) = (0, 0);
+#foreach my $item ($register->items) { 
+#}
+#
+## then relationships w/register_relationship
+#my ($relate_count, $relate_error) = (0, 0);
+#foreach my $relate ($register->relationships) {
+    #$relate_count++;
+    #if ($error) {
+        #$RESPONSE->add_declined ($relate, $error) if $error;
+        #$relate_error++;
+    #}
+#}
 
 exit_response ();
 
 ##############################################################################
 ### Subroutines ##############################################################
 ##############################################################################
+
+sub register {
+    my ($cmdb, $item_aref, %args) = @_;
+    my ($count, $error_count) = (0, 0);
+    foreach my $item (@$item_aref) { 
+        $count++;
+        my $error = $item->register ($cmdb, 'response' => $args{'response'},
+            'dataset' => $args{'dataset'}, 'mdr_parent' => $args{'mdr'});
+        if ($error) { 
+            $RESPONSE->add_declined ($item, $error) if $error;
+            $error_count++;
+        }
+    }
+    $LOGGER->info (sprintf ("%s out of %s", 
+        inflect ("NUM($error_count) registration PL_N(error)"),
+        inflect ("NUM($count) PL_N($args{'type'})")));
+}
 
 sub exit_error { 
     my ($error) = @_;

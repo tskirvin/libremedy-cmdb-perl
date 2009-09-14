@@ -127,10 +127,12 @@ sub xml {
     my $type = lc $self->type;
     if ($type eq 'accepted') { 
         $writer->startTag ('accepted');
+        $writer->dataElement ('notes', $self->string);
+        $writer->setDataIndent ($writer->getDataIndent + 4);    ## HACK
         foreach (@$alternate) {
             $writer->write_elem_or_raw ('alternateInstanceId', $_);
         }
-        $writer->dataElement ('notes', $self->string);
+        $writer->setDataIndent ($writer->getDataIndent - 4);    ## HACK
         $writer->endTag;
     } elsif ($type eq 'declined') {
         $writer->startTag ('declined');

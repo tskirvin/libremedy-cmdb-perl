@@ -118,7 +118,6 @@
       </target>
       <record>
         <hostedAccessPoint>
-          <Description>pchg-web1.stanford.edu => 171.67.16.11</Description>
           <Name>accesses-network-over</Name>
           <ShortDescription>accesses-network-over</ShortDescription>
         </hostedAccessPoint>
@@ -142,7 +141,6 @@
       </target>
       <record>
         <hostedAccessPoint>
-          <Description>pchg-web1.stanford.edu => 171.67.16.43</Description>
           <Name>accesses-network-over</Name>
           <ShortDescription>accesses-network-over</ShortDescription>
         </hostedAccessPoint>
@@ -166,7 +164,6 @@
       </target>
       <record>
         <hostedAccessPoint>
-          <Description>pchg-web1.stanford.edu => 000f1f698e00</Description>
           <Name>accesses-network-over</Name>
           <ShortDescription>accesses-network-over</ShortDescription>
         </hostedAccessPoint>
@@ -190,7 +187,6 @@
       </target>
       <record>
         <hostedAccessPoint>
-          <Description>pchg-web1.stanford.edu => 000f1f698e01</Description>
           <Name>accesses-network-over</Name>
           <ShortDescription>accesses-network-over</ShortDescription>
         </hostedAccessPoint>
@@ -214,7 +210,6 @@
       </target>
       <record>
         <hostedSystemComponent>
-          <Description>pchg-web1.stanford.edu => Linux Debian 5.0.1</Description>
           <Name>runs-operating-system</Name>
           <ShortDescription>runs-operating-system</ShortDescription>
         </hostedSystemComponent>
