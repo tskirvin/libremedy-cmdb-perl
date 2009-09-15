@@ -9,7 +9,6 @@
 ## modules, or to use development versions.
 # use lib '/FULL/PATH/TO/PERL/MODULES';
 use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-perl/lib";
-use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/Stanford-Remedy/lib";
 use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib";
 
 ## Print debugging information?  Set with '--debug', can be set many times

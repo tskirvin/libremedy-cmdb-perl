@@ -7,7 +7,15 @@ cmdb-register - takes XML on STDIN, and sends it to the CDMB daemon
 
 =head1 SYNOPSIS
 
+B<remctl cmdb cmdb register> cmdb register < I<XML>
+
 =head1 DESCRIPTION
+
+B<cmdb-register> takes an XML-formatted registration, parses the request to
+confirm that the XML is valid, and passes it off to the local remedy-cmdb
+service (along with a set of environment variables); it then returns an
+XML-formatted response.  It is meant for use with B<remctl>, so that clients
+can issue arbitrary registrations.
 
 =cut
 
@@ -18,15 +26,12 @@ cmdb-register - takes XML on STDIN, and sends it to the CDMB daemon
 ## Modify and uncomment this to use user modules instead of system-wide
 ## ones.  You'll need this unless you're installing as root.
 # use lib '/FULL/PATH/TO/PERL/MODULES';
-use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-perl/lib";
-use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib";
-# use lib '/PATH/TO/USER/CODE';
 
 ## Print debugging information?  Set with '--debug', can be set many times
 our $DEBUG = 0;
 
-# our $ALARM = 60;
-our $ALARM = 5;
+## How many seconds should we wait for the submission to go through?
+our $ALARM = 60;
 
 ##############################################################################
 ### Declarations #############################################################
@@ -37,11 +42,9 @@ use warnings;
 
 use Getopt::Long;
 use Remedy::CMDB::Client;
-use Remedy::CMDB::Register::Response qw/exit_error/;
+use Remedy::CMDB::Register::Response;
 use XML::Twig;
 use XML::Writer::Raw;
-
-use Remedy::CMDB::Struct;
 
 $0 =~ s%.*/%%g;     # Lose the annoying path information
 $|++;               # Flush output
@@ -84,6 +87,7 @@ exit 0;
 ### create_xml_string
 # Given an XML::Twig, creates and returns a string containing a full
 # 'cmdb-client' XML fragment.  Uses XML::Writer::Raw.
+## TODO: we might want to move this to a sub-module somewhere.
 sub create_xml_string {
     my ($twig) = @_;
     my $string;
@@ -112,21 +116,25 @@ sub create_xml_string {
     return $string;
 }
 
+## exit with an error
+sub exit_error { 
+    my ($text) = @_;
+    Remedy::CMDB::Register::Response->exit_error (@_) 
+}
+
 ###############################################################################
 ### Documentation #############################################################
 ###############################################################################
-
-=head1 NAME
-
-=head1 SYNOPSIS
-
-=head1 DESCRIPTION
 
 =head1 NOTES
 
 =head1 REQUIREMENTS
 
+B<Remedy::CMDB>
+
 =head1 SEE ALSO
+
+cmdb-query(1)
 
 =head1 TODO
 

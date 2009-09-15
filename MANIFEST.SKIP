@@ -1,0 +1,9 @@
+^debian
+\.git\/
+\.sw.$
+^Makefile.old$
+^MANIFEST.bak$
+^Makefile$
+bin/cmdb-submit
+bin/Makefile
+bin/test-remctl

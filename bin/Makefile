@@ -1,19 +1,31 @@
-REM_HOME=~/work/remedy/libremedy-perl
+### 
+REMEDY_HOME=/afs/ir/users/t/s/tskirvin/work/remedy/libremedy-perl
+REMEDY_CMDB_HOME=/afs/ir/users/t/s/tskirvin/work/remedy/libremedy-cmdb-perl
+
+XML=${REMEDY_CMDB_HOME}/sample/sample-reg.cmdbf.xml
+PERLLIB="${REMEDY_CMDB_HOME}/lib:${REMEDY_HOME}/lib"
 
 clean: 
-	./cmdb-clear MDR.IMPORT.PUPPET "restarting at `date`"
+	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/cmdb-clear \
+		MDR.IMPORT.PUPPET "restarting at `date`"
 
 clean-loud: 
-	./cmdb-clear --debug --debug --debug --debug --debug MDR.IMPORT.PUPPET "restarting at `date`"
+	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/cmdb-clear \
+		--debug --debug --debug --debug --debug MDR.IMPORT.PUPPET \
+		"restarting at `date`"
 
 current:
-	${REM_HOME}/bin/remedy-dump "BMC.CORE:BMC_BaseElement"
+	@PERLLIB=${PERLLIB} ${REMEDY_HOME}/bin/remedy-dump \
+		"BMC.CORE:BMC_BaseElement"
 
 real:
-	./cmdb-submit < sample.cmdbf.xml
+	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/cmdb-submit < ${XML}
 
 server:
-	./cmdb-server
+	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/cmdb-server
 
 client:
-	./cmdb-register < sample.cmdbf.xml
+	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/cmdb-register < ${XML}
+
+query:
+	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/cmdb-query < ${XML}

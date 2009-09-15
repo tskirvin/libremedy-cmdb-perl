@@ -3,9 +3,15 @@
 
 =head1 NAME
 
+cmdb-server - maintain an active connection to the Remedy CMDB
+
 =head1 SYNOPSIS
 
+B<cmdb-server> [--debug]
+
 =head1 DESCRIPTION
+
+[...]
 
 =cut
 
@@ -16,12 +22,9 @@
 ## Modify and uncomment this to use user modules instead of system-wide
 ## ones.  You'll need this unless you're installing as root.
 # use lib '/FULL/PATH/TO/PERL/MODULES';
-use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-perl/lib";
-use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib";
-# use lib '/PATH/TO/USER/CODE';
 
 ## Print debugging information?  Set with '--debug', can be set many times
-our $DEBUG = 5;
+our $DEBUG = 0;
 
 ## How many children should we allow running at a time?  This also works
 ## out to the maximum number of processes.
@@ -32,8 +35,10 @@ our $KIDS_MAX = 5;
 ## servers you connect to; the number is in seconds.
 our $TIMEOUT = 10;
 
-our $ALARM = 15;
+### How many seconds should we wait for a single spawned process to run?
+our $ALARM = 60;
 
+## Maximum number of times to retry a server connection.
 our $MAX_RETRY = 10;
 
 ##############################################################################
@@ -161,10 +166,10 @@ sub fork_client {
 sub reaper {
     my $child = waitpid (-1, WNOHANG);
 
-    ## no child waiting; ignore.
-    if    ($child == -1) { return }
+    ## no child waiting; ignore
+    if ($child == -1) { return }
     
-    ## the process exited; 
+    ## the process exited 
     elsif (WIFEXITED ($?)) { 
         $CHILDREN--;
         $LOGGER->debug ("reaped $child" . ($? ? " with exit $?" : ''));
@@ -172,26 +177,13 @@ sub reaper {
         $SIG{CHLD} = \&reaper;
     }
 
-    ## false alarm; ignore.
-    else                   { return }
+    ## false alarm; ignore
+    else { return }
 }
 
-
 ##############################################################################
-### Documentation ############################################################
+### Final Documentation ######################################################
 ##############################################################################
-
-=head1 NAME
-
-cmdb-server -
-
-=head1 SYNOPSIS
-
-B<cmdb-server> [--config F<CONFIG>]
-
-=head1 DESCRIPTION
-
-=head1 NOTES
 
 =head1 REQUIREMENTS
 

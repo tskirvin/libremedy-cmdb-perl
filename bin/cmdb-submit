@@ -4,7 +4,6 @@
 ### Configuration ############################################################
 ##############################################################################
 
-use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/Stanford-Remedy/lib";
 use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-perl/lib";
 use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib";
 
@@ -47,7 +46,6 @@ my $result = $parser->getoptions (
     'h|help'        => sub { pod2usage (-verbose => 1) }) || error_usage ();
 
 $config->log->more_logging ($DEBUG) if $DEBUG;
-# $LOGGER = $config->log->logger;
 
 ## read the XML from STDIN
 my $register = eval { Remedy::CMDB::Register->read ('xml', 'type' => 'stream', 
@@ -81,61 +79,9 @@ my $response = $register->register_all ($cmdb, 'dataset' => $dataset,
 
 exit_response ($response);
 
-## Start creating the response now
-# our $RESPONSE = Remedy::CMDB::Register::Response->new ();
-
-## Register all items
-# $LOGGER->debug ('registering items');
-# register ($cmdb, [$register->items], 'type' => 'item', 
-#     'response' => $RESPONSE, 'dataset' => $dataset, 'mdr' => $mdr_parent);
-
-# $LOGGER->debug ('registering relationships');
-# register ($cmdb, [$register->relationships], 'type' => 'relationship',
-#     'response' => $RESPONSE, 'dataset' => $dataset, 'mdr' => $mdr_parent);
-
-## TODO: ...and then, deregistration.
-# $LOGGER->debug ('registering deregistrations');
-
-#my ($item_count, $item_error) = (0, 0);
-#foreach my $item ($register->items) { 
-#}
-#
-## then relationships w/register_relationship
-#my ($relate_count, $relate_error) = (0, 0);
-#foreach my $relate ($register->relationships) {
-    #$relate_count++;
-    #if ($error) {
-        #$RESPONSE->add_declined ($relate, $error) if $error;
-        #$relate_error++;
-    #}
-#}
-
-# exit_response ();
-
 ##############################################################################
 ### Subroutines ##############################################################
 ##############################################################################
-
-=cut
-
-sub register {
-    my ($cmdb, $item_aref, %args) = @_;
-    my ($count, $error_count) = (0, 0);
-    foreach my $item (@$item_aref) { 
-        $count++;
-        my $error = $item->register ($cmdb, 'response' => $args{'response'},
-            'dataset' => $args{'dataset'}, 'mdr_parent' => $args{'mdr'});
-        if ($error) { 
-            $RESPONSE->add_declined ($item, $error) if $error;
-            $error_count++;
-        }
-    }
-    $LOGGER->info (sprintf ("%s out of %s", 
-        inflect ("NUM($error_count) registration PL_N(error)"),
-        inflect ("NUM($count) PL_N($args{'type'})")));
-}
-
-=cut
 
 sub exit_error { 
     my ($error) = @_;
@@ -143,8 +89,7 @@ sub exit_error {
     Remedy::CMDB::Register::Response->exit_error ($error)
 }
 
-sub exit_response { my $response = shift; $response->exit_response (@_);
-}
+sub exit_response { my $response = shift; $response->exit_response (@_) }
 
 sub error_usage {
     my ($error) = @_;

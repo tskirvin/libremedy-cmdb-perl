@@ -1,0 +1,69 @@
+#!/bin/bash
+# cmdb-server
+# chkconfig: 2345 99 99
+# description: control the CMDB Interface Daemon 
+#
+# processname: cmdb-server
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+NAME_HUMAN="CMDB Server"
+RETVAL=0
+PROGRAM=/usr/sbin/cmdb-server
+OPTIONS=''
+UID='cmdb'
+
+# See how we were called.
+case "$1" in
+    start)
+	    echo -n "Starting ${NAME_HUMAN}: "
+
+	    pkill -0 -f $PROGRAM
+	    RETVAL=$?
+	    if [ $RETVAL -eq 0 ]; then
+		    echo "already running"
+		    exit 0
+	    fi
+	
+	    setuidgid ${UID} $PROGRAM $OPTIONS
+	    RETVAL=$?
+	    if [ $RETVAL -eq 0 ]; then
+		    echo_success
+	    else
+		    echo_failure
+	    fi
+	    echo
+	    ;;
+    stop)
+	    echo -n "Stopping CMDB Server: "
+	    pkill -f $PROGRAM
+	    RETVAL=$?
+	    if [ $RETVAL -eq 0 ]; then
+		    echo_success
+	    else
+		    echo_failure
+	    fi
+	    echo
+	    ;;
+    status)
+        pid=`pidof -x $PROGRAM`
+        if [ -n "$pid" ]; then
+            echo $"$PROGRAM (pid $pid) is running..."
+            RETVAL=0
+        else
+            echo "$PROGRAM is stopped"
+            RETVAL=3
+        fi
+        ;;
+  restart|reload)
+  	    $0 stop
+	    $0 start
+	    RETVAL=$?
+	    ;;
+  *)
+	    echo "Usage: $0 {start|stop|restart}"
+	    exit 1
+esac
+
+exit $RETVAL

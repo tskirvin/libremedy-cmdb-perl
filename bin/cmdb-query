@@ -3,9 +3,19 @@
 
 =head1 NAME
 
+cmdb-query -- stub for querying the Remedy CMDB
+
 =head1 SYNOPSIS
 
+B<remctl cmdb cmdb query> cmdb query < I<XML>
+
 =head1 DESCRIPTION
+
+B<cmdb-query> takes an XML-formatted query, parses the request to confirm
+that the XML is valid, and passes it off to the local remedy query service
+(along with a set of environment variables); it then returns an XML-formatted
+response.  It is meant for use with B<remctl>, so that clients can issue
+arbitrary queries.
 
 =cut
 
@@ -16,9 +26,6 @@
 ## Modify and uncomment this to use user modules instead of system-wide
 ## ones.  You'll need this unless you're installing as root.
 # use lib '/FULL/PATH/TO/PERL/MODULES';
-use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-perl/lib";
-use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib";
-# use lib '/PATH/TO/USER/CODE';
 
 ## Print debugging information?  Set with '--debug', can be set many times
 our $DEBUG = 0;
@@ -61,29 +68,12 @@ exit_error ('query service not yet implemented');
 
 sub exit_error { 
     my ($text) = @_;
-    # $LOGGER->fatal ($text);
     Remedy::CMDB::Query::Response->exit_error (@_) 
 }
 
 ###############################################################################
-### Documentation #############################################################
+### Final Documentation #######################################################
 ###############################################################################
-
-=head1 NAME
-
-cmdb-query -- stub for querying the Remedy CMDB
-
-=head1 SYNOPSIS
-
-B<remctl cmdb cmdb query> cmdb query < I<XML>
-
-=head1 DESCRIPTION
-
-B<cmdb-query> takes an XML-formatted query, parses the request to confirm
-that the XML is valid, and passes it off to the local remedy query service
-(along with a set of environment variables); it then returns an XML-formatted
-response.  It is meant for use with B<remctl>, so that clients can issue
-arbitrary queries.
 
 =head1 OPTIONS
 
@@ -115,7 +105,7 @@ B<Remedy::CMDB>, B<XML::Twig>
 
 =head1 SEE ALSO
 
-B<cmdb-register>
+cmdb-register(1)
 
 =head1 HOMEPAGE
 

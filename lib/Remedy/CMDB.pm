@@ -4,7 +4,12 @@ our $VERSION = "0.01";
 
 =head1 NAME
 
+Remedy::CMDB - an interface to the Remedy CMDB
+
 =head1 SYNOPSIS
+
+    use Remedy::CMDB;
+
 
 =head1 DESCRIPTION
 
@@ -13,21 +18,7 @@ our $VERSION = "0.01";
 ##############################################################################
 ### Configuration ############################################################
 ##############################################################################
-
-=head1 VARIABLES
-
-These variables primarily hold human-readable translations of the status,
-impact, etc of the ticket; but there are a few other places for customization.
-
-=over 4
-
-=item $CONFIG
-
-=cut
-
-=back
-
-=cut
+## Configuration all goes into the Remedy::CMDB::Config object.
 
 ##############################################################################
 ### Declarations #############################################################
@@ -262,6 +253,10 @@ sub _or_die {
 ##############################################################################
 ### Final Documentation ######################################################
 ##############################################################################
+
+=head1 ABSTRACT
+
+The abstract that will go in the main Remedy::CMDB module will go here.
 
 =head1 REQUIREMENTS
 
