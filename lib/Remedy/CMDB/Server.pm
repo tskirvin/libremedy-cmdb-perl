@@ -14,7 +14,7 @@ our $VERSION = "0.01.01";
 ### Configuration ############################################################
 ##############################################################################
 
-our $SOCKET   = "/tmp/cmdb";
+our $SOCKET   = "/tmp/cmdb-socket";
 our $MAXCONN  = 32;  
 our $PROTOCOL = SOCK_DGRAM; 
 
@@ -36,6 +36,8 @@ use Class::Struct;
 use IO::Socket;
 
 use Remedy::CMDB;
+use Remedy::CMDB::Client::XML;
+use Remedy::CMDB::Client::Response;
 
 struct 'Remedy::CMDB::Server' => {
     'cmdb'       => 'Remedy::CMDB',
@@ -148,9 +150,40 @@ sub disconnect {
 
 sub process {
     my ($self, $client, @xml) = @_;
-    # should actually parse the XML, and see what script to run it through
-    my @reverse = reverse @xml;
-    return @reverse;
+    my $logger = $self->logger_or_die;
+    
+    my $register;
+    {   
+        local $@;
+        $register = eval { Remedy::CMDB::Client::XML->read ('xml', 
+            'type' => 'stream', 'source' => join ('', @xml)) };
+        if ($@) { 
+            $logger->fatal ("invalid XML: $@");
+            return "invalid xml: $@\n" unless $register;
+        }
+    }
+    return $self->error ("could not create registration object: $@") unless $register;
+
+    my $class = $register->class;
+    my $query = $register->query;
+    
+    $logger->debug ("doing a $class query on $query");
+
+    ## Make sure the mdrId is set; we'll match it in a second
+    my $mdr_parent = $query->mdrId || 
+        return $self->error ("no mdrId in source XML");
+    $logger->debug ("mdr_parent is $mdr_parent");
+
+    ## Now make sure the mdrId matches a valid dataset
+    my $dataset = $self->cmdb->config->mdr_to_dataset ($mdr_parent) 
+        || return $self->exit_error ("no dataset mapping for $mdr_parent");
+    $LOGGER->debug ("associated dataset is $dataset");
+
+    ## TODO: kerberos principal check
+
+    my $response = $query->register_all ($self->cmdb, 
+        'dataset' => $dataset, 'mdr' => $mdr_parent);
+    return scalar $response->xml;
 }
 
 # eventually, we'll keep the logger in the object, but not yet
@@ -160,6 +193,16 @@ sub logger_or_die {
     $self->cmdb->logger_or_die;
 }
 
+sub error { 
+    my ($self, $text, %args) = @_;
+    my $logger = $self->logger_or_die;
+    my $response = $args{'response'} || $self->response;
+    $response->add_error ('global', $text);
+    $logger->fatal ($text);
+    return scalar $response->xml;
+}
+
+sub response { shift; Remedy::CMDB::Client::Response->new (@_) }
 
 =back
 

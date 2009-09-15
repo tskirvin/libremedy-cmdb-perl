@@ -1,4 +1,4 @@
-package Remedy::CMDB::RelationshipList;
+package Remedy::CMDB::Relationship::List;
 
 ##############################################################################
 ### Declarations #############################################################

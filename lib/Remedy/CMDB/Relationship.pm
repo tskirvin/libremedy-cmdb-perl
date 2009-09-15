@@ -25,6 +25,7 @@ use Remedy::CMDB::Relationship::Record;
 use Remedy::CMDB::Relationship::Source;
 use Remedy::CMDB::Relationship::Target;
 use Remedy::CMDB::Relationship::Response;
+use Remedy::CMDB::Relationship::InstanceId;
 use Remedy::CMDB::Relationship::DataSource;
 
 use Remedy::CMDB::Struct qw/init_struct/;
@@ -55,7 +56,7 @@ our @ISA = init_struct (__PACKAGE__);
 =cut
 
 sub fields {
-    'instanceId' => 'Remedy::CMDB::Item::InstanceID',
+    'instanceId' => '$',
     'record'     => 'Remedy::CMDB::Relationship::Record',   # TODO: '$'?
     'source'     => 'Remedy::CMDB::Relationship::Source',
     'target'     => 'Remedy::CMDB::Relationship::Target',
@@ -111,9 +112,7 @@ sub response { shift; Remedy::CMDB::Relationship::Response->new (@_) }
 
 sub source_data {
     my ($self) = @_;
-    my $src = Remedy::CMDB::Relationship::DataSource->new (
-        'source' => $self->source, 'target' => $self->target);
-    return $src;
+    return $self->instanceId;
 }
 
 =back
@@ -178,7 +177,6 @@ sub find {
 
 =cut
 
-# known to not work yet
 sub register { 
     my ($self, $cmdb, %args) = @_;
     return 'no cmdb connection' unless $cmdb && $cmdb->remedy;
@@ -298,7 +296,7 @@ sub populate_xml {
     return 'tag type should be relationship' unless 
         (lc $xml->tag eq 'relationship');
 
-    foreach my $field (qw/source target record/) {
+    foreach my $field (qw/source target record instanceId/) {
         my $id;
         foreach my $item ($xml->children ($field)) {
             return 'too many items in $field' if $id;

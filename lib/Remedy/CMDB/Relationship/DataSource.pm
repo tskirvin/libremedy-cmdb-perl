@@ -18,8 +18,7 @@ our @ISA = init_struct (__PACKAGE__);
 ##############################################################################
 
 sub fields {
-    'source' => 'Remedy::CMDB::Relationship::Source',
-    'target' => 'Remedy::CMDB::Relationship::Target',
+    'instanceId' => 'Remedy::CMDB::Relationship::InstanceId',
 }
 
 ##############################################################################

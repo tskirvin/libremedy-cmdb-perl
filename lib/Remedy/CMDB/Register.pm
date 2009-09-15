@@ -21,11 +21,14 @@ our $VERSION = "0.01.01";
 use strict;
 use warnings;
 
+use Lingua::EN::Inflect qw/inflect/;
+
 use Remedy::CMDB::Struct qw/init_struct/;
 our @ISA = init_struct (__PACKAGE__);
 
-use Remedy::CMDB::ItemList;
-use Remedy::CMDB::RelationshipList;
+use Remedy::CMDB::Item::List;
+use Remedy::CMDB::Relationship::List;
+use Remedy::CMDB::Register::Response;
 
 ##############################################################################
 ### Subroutines ##############################################################
@@ -41,8 +44,9 @@ use Remedy::CMDB::RelationshipList;
 
 sub fields {
     'mdrId'             => '$',
-    'itemList'          => 'Remedy::CMDB::ItemList',
-    'relationshipList'  => 'Remedy::CMDB::RelationshipList',
+    'itemList'          => 'Remedy::CMDB::Item::List',
+    'relationshipList'  => 'Remedy::CMDB::Relationship::List',
+    'deregisterList'    => 'Remedy::CMDB::Deregister::List',
 }
 
 =item populate_xml (XML)
@@ -64,7 +68,7 @@ sub populate_xml {
     $self->mdrId ($mdr);
 
     if (my $itemlist = $xml->first_child ('itemList')) {
-        my $obj = Remedy::CMDB::ItemList->read ('xml', 'source' => $itemlist,
+        my $obj = Remedy::CMDB::Item::List->read ('xml', 'source' => $itemlist,
             'type' => 'object');
         return 'could not parse itemList' unless $obj;
         return $obj unless ref $obj;
@@ -72,7 +76,7 @@ sub populate_xml {
     }
 
     if (my $relationshiplist = $xml->first_child ('relationshipList')) {
-        my $obj = Remedy::CMDB::RelationshipList->read ('xml', 
+        my $obj = Remedy::CMDB::Relationship::List->read ('xml', 
             'source' => $relationshiplist, 'type' => 'object');
         return 'could not parse relationshipList' unless $obj;
         return $obj unless ref $obj;
@@ -80,6 +84,51 @@ sub populate_xml {
     }
     
     return;
+}
+
+## need to add error checking to this, but it mostly works...
+sub register_all {
+    my ($self, $cmdb, %args) = @_;
+    my $logger = $cmdb->logger_or_die;
+
+    my $dataset = $args{'dataset'};
+    my $mdr     = $args{'mdr'};
+
+    my $response = Remedy::CMDB::Register::Response->new ();
+
+    $logger->debug ('registering all items');
+    $self->do_register_all ($cmdb, [$self->items], 'type' => 'item', 
+        'response' => $response, 'dataset' => $dataset, 'mdr' => $mdr);
+
+    $logger->debug ('registering all relationships');   
+    $self->do_register_all ($cmdb, [$self->relationships], 
+        'type' => 'relationships', 'response' => $response, 
+        'dataset' => $dataset, 'mdr' => $mdr);
+
+    $logger->debug ('registering all deregister requests');   
+    $self->do_register_all ($cmdb, [$self->deregisters], 
+        'type' => 'deregister', 'response' => $response, 
+        'dataset' => $dataset, 'mdr' => $mdr);
+        
+    return $response;
+}
+
+sub do_register_all {
+    my ($self, $cmdb, $item_aref, %args) = @_;
+    my $response = $args{'response'};
+    my ($count, $error_count) = (0, 0);
+    foreach my $item (@$item_aref) { 
+        $count++;
+        my $error = $item->register ($cmdb, 'response' => $args{'response'},
+            'dataset' => $args{'dataset'}, 'mdr_parent' => $args{'mdr'});
+        if ($error) { 
+            $response->add_declined ($item, $error) if $error;
+            $error_count++;
+        }
+    }
+    $cmdb->logger_or_die->info (sprintf ("%s out of %s", 
+        inflect ("NUM($error_count) registration PL_N(error)"),
+        inflect ("NUM($count) PL_N($args{'type'})")));
 }
 
 sub populate_remedy { "not yet implemented" }
@@ -122,6 +171,10 @@ sub relationships {
     return unless my $list = $relationshiplist->list;
     return unless ref $list && scalar @$list;
     return @$list;
+}
+
+sub deregisters { 
+    return; 
 }
 
 sub tag_type { 'registerRequest' }

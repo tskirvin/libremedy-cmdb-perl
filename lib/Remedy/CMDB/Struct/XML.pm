@@ -49,10 +49,10 @@ sub load_xml_bad {
     my $type   = $opts{'type'}   || return "no valid type";
     my $source = $opts{'source'} || return "no valid source";
     if      (lc $type eq 'stream') {
-        $xml = XML::Twig->new ();
+        $xml = XML::Twig->new ('no_prolog' => 1);
         return "could not parse: $@" unless $xml->safe_parse ($source);
     } elsif (lc $type eq 'file') {
-        $xml = XML::Twig->new ();
+        $xml = XML::Twig->new ('no_prolog' => 1);
         return "could not parse: $@" unless $xml->safe_parsefile ($source);
     } elsif (lc $type eq 'object') {
         $xml = $source;

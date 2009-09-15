@@ -101,9 +101,7 @@ sub response { shift; Remedy::CMDB::Item::Response->new (@_) }
 
 sub source_data {
     my ($self) = @_;
-    my $src = Remedy::CMDB::Item::DataSource->new ('instanceId' => 
-        $self->instanceId);
-    return $src;
+    return $self->instanceId;
 }
 
 =back

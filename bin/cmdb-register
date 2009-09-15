@@ -37,7 +37,7 @@ use warnings;
 
 use Getopt::Long;
 use Remedy::CMDB::Client;
-use Remedy::CMDB::RegisterResponse qw/exit_error/;
+use Remedy::CMDB::Register::Response qw/exit_error/;
 use XML::Twig;
 use XML::Writer::Raw;
 
@@ -58,15 +58,13 @@ my $result = $parser->getoptions (
 exit_error ('bad command-line options') unless $result;
 
 # just make sure the XML is good
-my $twig = XML::Twig->new;
+my $twig = XML::Twig->new ('no_prolog' => 1);
 $twig->safe_parse (join ('', <STDIN>)) || exit_error ('bad input XML');
-    # TODO: should this really be a <registerResponse>?
-
-
-my $string = create_xml_string ($twig);
 
 $SIG{ALRM} = sub { exit_error ("$0: timeout ($ALARM seconds)") };
 alarm $ALARM;
+
+my $string = create_xml_string ($twig);
 
 my $client = eval { Remedy::CMDB::Client->connect ('DEBUG' => $DEBUG) }
     or exit_error ("couldn't connect to CMDB: $@\n");
@@ -91,6 +89,7 @@ sub create_xml_string {
     my $string;
     my $writer = XML::Writer::Raw->new ('OUTPUT' => \$string, 
         'DATA_INDENT' => 4, 'NEWLINES' => 0, 'DATA_MODE' => 1, 'UNSAFE' => 1);
+    $writer->xmlDecl ();
     $writer->startTag ('cmdb-client');
     { 
         $writer->startTag ('environment');
@@ -101,8 +100,10 @@ sub create_xml_string {
 
         my %args = ('pretty_print' => 'indented');  # was indented_a
         $writer->startTag ('request');
+        $writer->setDataIndent ($writer->getDataIndent + 4);  ## HACK
         $writer->write_raw_with_format ($twig->sprint (%args));
-        $writer->endTag;
+        $writer->setDataIndent ($writer->getDataIndent - 4);  ## HACK
+        $writer->endTag ('request');
 
     } 
     $writer->endTag;

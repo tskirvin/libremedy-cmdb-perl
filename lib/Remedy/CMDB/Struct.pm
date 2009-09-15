@@ -123,7 +123,8 @@ sub read_xml {
     }
 
     if (my $error = $self->populate_xml ($data)) {
-        $LOGGER->error ("$class: couldn't populate from XML: $error");
+        # $LOGGER->error ("$class: couldn't populate from XML: $error");
+        $LOGGER->logdie ("$class: couldn't populate from XML: $error\n");
         return;
     }
 

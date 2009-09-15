@@ -17,6 +17,6 @@ our @ISA = qw/Remedy::CMDB::Template::ResponseItem/;
 ### Overrides ################################################################
 ##############################################################################
 
-sub tag_type   { "itemResponse" }
+sub tag_type   { "registerInstanceResponse" }
 
 1;

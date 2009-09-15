@@ -9,7 +9,7 @@ use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-perl/lib";
 use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib";
 
 ## Print debugging information?  Set with '--debug', can be set many times
-our $DEBUG = 2;
+our $DEBUG = 5;
 
 ##############################################################################
 ### Declarations #############################################################
@@ -75,20 +75,26 @@ my $cmdb = eval { Remedy::CMDB->connect ('config' => $config) }
     || exit_error ("couldn't create CMDB object: $@");
 exit_error ($@) if $@;
 
+
+my $response = $register->register_all ($cmdb, 'dataset' => $dataset, 
+    'mdr' => $mdr_parent);
+
+exit_response ($response);
+
 ## Start creating the response now
-our $RESPONSE = Remedy::CMDB::Register::Response->new ();
+# our $RESPONSE = Remedy::CMDB::Register::Response->new ();
 
 ## Register all items
-$LOGGER->debug ('registering items');
-register ($cmdb, [$register->items], 'type' => 'item', 
-    'response' => $RESPONSE, 'dataset' => $dataset, 'mdr' => $mdr_parent);
+# $LOGGER->debug ('registering items');
+# register ($cmdb, [$register->items], 'type' => 'item', 
+#     'response' => $RESPONSE, 'dataset' => $dataset, 'mdr' => $mdr_parent);
 
-$LOGGER->debug ('registering relationships');
-register ($cmdb, [$register->relationships], 'type' => 'relationship',
-    'response' => $RESPONSE, 'dataset' => $dataset, 'mdr' => $mdr_parent);
+# $LOGGER->debug ('registering relationships');
+# register ($cmdb, [$register->relationships], 'type' => 'relationship',
+#     'response' => $RESPONSE, 'dataset' => $dataset, 'mdr' => $mdr_parent);
 
 ## TODO: ...and then, deregistration.
-$LOGGER->debug ('registering deregistrations');
+# $LOGGER->debug ('registering deregistrations');
 
 #my ($item_count, $item_error) = (0, 0);
 #foreach my $item ($register->items) { 
@@ -104,11 +110,13 @@ $LOGGER->debug ('registering deregistrations');
     #}
 #}
 
-exit_response ();
+# exit_response ();
 
 ##############################################################################
 ### Subroutines ##############################################################
 ##############################################################################
+
+=cut
 
 sub register {
     my ($cmdb, $item_aref, %args) = @_;
@@ -127,13 +135,16 @@ sub register {
         inflect ("NUM($count) PL_N($args{'type'})")));
 }
 
+=cut
+
 sub exit_error { 
     my ($error) = @_;
     $LOGGER->fatal ($error);
     Remedy::CMDB::Register::Response->exit_error ($error)
 }
 
-sub exit_response { $RESPONSE->exit_response (@_) }
+sub exit_response { my $response = shift; $response->exit_response (@_);
+}
 
 sub error_usage {
     my ($error) = @_;

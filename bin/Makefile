@@ -9,9 +9,6 @@ clean-loud:
 current:
 	${REM_HOME}/bin/remedy-dump "BMC.CORE:BMC_BaseElement"
 
-import:
-	./cmdb-submit < sample-tiny.cmdbf.xml
-
 real:
 	./cmdb-submit < sample.cmdbf.xml
 
@@ -19,4 +16,4 @@ server:
 	./cmdb-server
 
 client:
-	./cmdb-register < sample-tiny.cmdbf.xml
+	./cmdb-register < sample.cmdbf.xml

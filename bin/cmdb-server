@@ -113,9 +113,7 @@ while (1) {
     $client->shutdown (0);  # no more reading
 
     my @return = $server->process ($client, @input);
-    foreach (@return) { 
-        print $client $_ 
-    }
+    foreach (@return) { print $client $_ }
 
     $client->shutdown (2);  # no more writing either
 

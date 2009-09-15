@@ -1,4 +1,4 @@
-package Remedy::CMDB::ItemList;
+package Remedy::CMDB::Relationship::InstanceId;
 
 ##############################################################################
 ### Declarations #############################################################
@@ -6,16 +6,14 @@ package Remedy::CMDB::ItemList;
 
 use strict;
 
-use Remedy::CMDB::Template::List;
-use Remedy::CMDB::Item;
+use Remedy::CMDB::Template::ID;
 
-our @ISA = qw/Remedy::CMDB::Template::List/;
+our @ISA = qw/Remedy::CMDB::Template::ID/;
 
 ##############################################################################
 ### Overrides ################################################################
 ##############################################################################
 
-sub tag_type { "itemList" }
-sub list_class { 'Remedy::CMDB::Item' }
+sub tag_type { "instanceId" }
 
 1;

@@ -1,22 +1,21 @@
-package Remedy::CMDB::Relationship::Response;
-our $VERSION = "0.01.01";
-# Copyright and license are in the documentation below.
+package Remedy::CMDB::Item::List;
 
 ##############################################################################
 ### Declarations #############################################################
 ##############################################################################
 
 use strict;
-use warnings;
 
-use Remedy::CMDB::Template::ResponseItem;
+use Remedy::CMDB::Template::List;
+use Remedy::CMDB::Item;
 
-our @ISA = qw/Remedy::CMDB::Template::ResponseItem/;
+our @ISA = qw/Remedy::CMDB::Template::List/;
 
 ##############################################################################
 ### Overrides ################################################################
 ##############################################################################
 
-sub tag_type   { "registerInstanceResponse" }
+sub tag_type { "itemList" }
+sub list_class { 'Remedy::CMDB::Item' }
 
 1;

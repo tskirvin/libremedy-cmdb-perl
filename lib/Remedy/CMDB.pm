@@ -160,7 +160,6 @@ sub find_translation {
     
 }
 
-## need to make this work again
 sub register_translation {
     my ($self, %fields) = @_;
     my $logger  = $self->logger_or_die ('no logger at item registration');
