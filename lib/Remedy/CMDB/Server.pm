@@ -14,7 +14,7 @@ our $VERSION = "0.01.01";
 ### Configuration ############################################################
 ##############################################################################
 
-our $SOCKET   = "/tmp/cmdb-socket";
+our $SOCKET   = "/var/lib/cmdb/cmdb-socket";
 our $MAXCONN  = 32;  
 our $PROTOCOL = SOCK_DGRAM; 
 
@@ -111,6 +111,8 @@ sub server_open {
 
     $self->socket   ($server);
     $self->socketfile ($file);
+
+    chmod (0777, $file);
 
     return $self->socket;
 }

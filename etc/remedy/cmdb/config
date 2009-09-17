@@ -2,8 +2,8 @@
 ### Remedy CMDB Configuration #################################################
 ###############################################################################
 
-$SOCKET_FILE = "/tmp/cmdb_socket";
-$LOGFILE     = "/tmp/cmdb-log.txt";
+$SOCKET_FILE = "/var/lib/cmdb/cmdb_socket";
+$LOGFILE     = "/var/lib/cmdb/cmdb-log.txt";
 
 $CLASSES = "/etc/remedy/cmdb/classes.csv";
 $SOURCES = "/etc/remedy/cmdb/sources.csv";

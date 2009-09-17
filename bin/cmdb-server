@@ -41,6 +41,8 @@ our $ALARM = 60;
 ## Maximum number of times to retry a server connection.
 our $MAX_RETRY = 10;
 
+our $DAEMON = 0;
+
 ##############################################################################
 ### Declarations #############################################################
 ##############################################################################
@@ -58,6 +60,10 @@ use POSIX qw(:sys_wait_h :signal_h :errno_h);
 $0 =~ s%.*/%%g;     # Lose the annoying path information
 $|++;               # Flush output
 
+## allow daemonization
+our $TIME_TO_DIE = 0;
+$SIG{INT} = $SIG{TERM} = $SIG{HUP} = \&signal_handler;
+
 ###############################################################################
 ### main() ####################################################################
 ###############################################################################
@@ -67,10 +73,17 @@ our $LOGGER = Remedy::CMDB::Log->get_logger;
 my $parser = Getopt::Long::Parser->new;
 my $result = $parser->getoptions (
     'd|debug+'      => \$DEBUG,
+    'daemon'        => \$DAEMON,
     'man'           => sub { pod2usage (-verbose => 2, -noperldoc => 1) },
     'h|help'        => sub { pod2usage (-verbose => 1) }) || _error_usage ();
 
 $SIG{CHLD} = \&reaper; 		   # Set what to do when the children die.
+
+if ($DAEMON) { 
+    my $pid = fork;
+    exit if $pid;
+    die "Couldn't fork: $!" unless defined $pid;
+}
 
 our $server = Remedy::CMDB::Server->connect (
     'debug'     => $DEBUG
@@ -88,6 +101,7 @@ my $socket = $server->socket;
 # Accept and process the connections
 
 while (1) { 
+    last if ($TIME_TO_DIE);
     my $client = $server->socket->accept;
     next unless $client && defined fileno $client;
     while ($CHILDREN >= $KIDS_MAX) { sleep 1 }  # Only allow $MAXKIDS servers
@@ -106,7 +120,8 @@ while (1) {
     $server->socket_close;
     $logger->info  ("connection $count established");
 
-    $SIG{ALRM} = sub { exit_error ("submit time of $ALARM secs exceeded") }; 
+    ## TODO: make this return with a nice error.
+    $SIG{ALRM} = sub { die "submit time of $ALARM secs exceeded" }; 
     alarm $ALARM;
 
     my @input;
@@ -180,6 +195,8 @@ sub reaper {
     ## false alarm; ignore
     else { return }
 }
+
+sub signal_handler { $TIME_TO_DIE++ }
 
 ##############################################################################
 ### Final Documentation ######################################################

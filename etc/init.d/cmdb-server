@@ -11,22 +11,23 @@
 NAME_HUMAN="CMDB Server"
 RETVAL=0
 PROGRAM=/usr/sbin/cmdb-server
-OPTIONS=''
-UID='cmdb'
+PROGRAM_RUN=cmdb-server
+OPTIONS='--daemon'
+USER='cmdb'
 
 # See how we were called.
 case "$1" in
     start)
 	    echo -n "Starting ${NAME_HUMAN}: "
 
-	    pkill -0 -f $PROGRAM
+	    pkill -0 -f $PROGRAM_RUN
 	    RETVAL=$?
 	    if [ $RETVAL -eq 0 ]; then
 		    echo "already running"
 		    exit 0
 	    fi
 	
-	    setuidgid ${UID} $PROGRAM $OPTIONS
+	    setuidgid ${USER} $PROGRAM $OPTIONS
 	    RETVAL=$?
 	    if [ $RETVAL -eq 0 ]; then
 		    echo_success
@@ -37,7 +38,7 @@ case "$1" in
 	    ;;
     stop)
 	    echo -n "Stopping CMDB Server: "
-	    pkill -f $PROGRAM
+	    pkill -f $PROGRAM_RUN
 	    RETVAL=$?
 	    if [ $RETVAL -eq 0 ]; then
 		    echo_success
@@ -47,12 +48,12 @@ case "$1" in
 	    echo
 	    ;;
     status)
-        pid=`pidof -x $PROGRAM`
+        pid=`pidof -x $PROGRAM_RUN`
         if [ -n "$pid" ]; then
-            echo $"$PROGRAM (pid $pid) is running..."
+            echo $"$PROGRAM_RUN (pid $pid) is running..."
             RETVAL=0
         else
-            echo "$PROGRAM is stopped"
+            echo "$PROGRAM_RUN is stopped"
             RETVAL=3
         fi
         ;;

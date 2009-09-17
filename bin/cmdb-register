@@ -41,6 +41,7 @@ use strict;
 use warnings;
 
 use Getopt::Long;
+use Pod::Usage;
 use Remedy::CMDB::Client;
 use Remedy::CMDB::Register::Response;
 use XML::Twig;

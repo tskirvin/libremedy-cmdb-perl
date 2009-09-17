@@ -1,5 +1,6 @@
 ^debian
 \.git\/
+\.gitignore
 \.sw.$
 ^Makefile.old$
 ^MANIFEST.bak$

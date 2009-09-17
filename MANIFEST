@@ -1,12 +1,8 @@
-.gitignore
 bin/cmdb-clear
 bin/cmdb-query
 bin/cmdb-register
 bin/cmdb-server
-bin/cmdb-submit
-bin/Makefile
-bin/sample-reg.cmdbf.xml
-bin/test-remctl
+etc/init.d/cmdb-server
 etc/remctl/conf.d/cmdb
 etc/remedy/cmdb/classes.csv
 etc/remedy/cmdb/config
@@ -55,6 +51,7 @@ lib/Remedy/CMDB/Template/ResponseItem.pm
 lib/Remedy/Form/CMDB_Clear.pm
 lib/XML/Writer/Raw.pm
 Makefile.PL
-MANIFEST
+MANIFEST			This list of files
 MANIFEST.SKIP
 README
+sample/sample-reg.cmdbf.xml
