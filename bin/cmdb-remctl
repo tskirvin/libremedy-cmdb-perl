@@ -1,32 +1,166 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -T
+# Copyright and license are in the documentation below.
+
+=head1 NAME
+
+cmdb-remctl - register CMDB data via remctl
+
+=head1 SYNOPSIS
+
+B<cmdb-remctl> I<SERVER> < I<XML>
+
+B<cmdb-remctl> I<SERVER> (I<SERVICE> (I<ACTION>)) < I<XML>
+
+=head1 DESCRIPTION
+
+cmdb-remctl takes a piece of XML on STDIN and sends it via remctl to an
+appropriately listening CMDB registration service.  
+
+This script basically allows us to hand-generate XML and submit it to the
+registration service in the same manner as the extractor agents.  If you're
+looking to do things on the local system, you can use B<cmdb-register> to
+bypass the remctl step, or B<cmdb-submit> to bypass the locally running server
+entirely.
+
+=cut
 
 ##############################################################################
 ### Configuration ############################################################
 ##############################################################################
 
-our $SERVER = "cmdb-uat.stanford.edu";
- 
+## If set, we'll print a little bit of debugging information.
+our $DEBUG   = 0;
+
+## The server, service, and action that we're sending via remctl.  All can 
+## be reassigned from the command line.
+our $SERVER  = '';
+our $SERVICE = 'cmdb';
+our $ACTION  = 'register';
+
 ##############################################################################
 ### Declarations #############################################################
 ##############################################################################
 
 use Net::Remctl;
+use Getopt::Long;
+use Pod::Usage;
 
 use strict;
+# use warnings;     # the remctl interface doesn't like warnings
 
 ##############################################################################
 ### main () ##################################################################
 ##############################################################################
 
+## this is the only place we're going to use non-XML exit error strings
+my $parser = new Getopt::Long::Parser;
+$parser->getoptions (
+    'debug'         => \$DEBUG,
+    'man'           => sub { pod2usage (-verbose => 2, -noperldoc => 1) },
+    'h|help'        => sub { pod2usage (-verbose => 1) }) || error_usage ();
+
 my @data = <STDIN>;
 
-my $result = remctl ($SERVER, undef, undef, "cmdb", "register", 
-    join ("", @data));
+my ($server, $service, $action) = @ARGV;
+$server  ||= $SERVER;  exit_error ('no server name provided')  unless $server;
+$service ||= $SERVICE; exit_error ('no service name provided') unless $service;
+$action  ||= $ACTION;  exit_error ('no action provided')       unless $action;
+
+my $data = join ('', @data);
+
+my $remctl = Net::Remctl->new;
+
+if ($DEBUG) { warn "running 'remctl $server $service $action (STDIN)'\n"; }
+my $result = remctl ($server, undef, undef, $service, $action, $data);
 
 if ($result->error) {
-    die "test echo failed with error ", $result->error, "\n";
+    die "remctl error: '", $result->error, "'\n";
 } else {
     if (my $stderr = $result->stderr) { warn "warning: $stderr\n"; }
     print $result->stdout;
     exit $result->status;
 }
+
+exit 1;     # how'd we get here, anyway?
+
+##############################################################################
+### Subroutines ##############################################################
+##############################################################################
+
+sub exit_error {
+    pod2usage (-message => join ('', @_), -exit_status => 2, -verbose => 1);
+}
+
+##############################################################################
+### Documentation ############################################################
+##############################################################################
+
+=head1 ARGUMENTS
+
+=over 4 
+
+=item I<SERVER>
+
+The server to connect to via remctl.  No default.
+
+=item I<SERVICE>
+
+The service to connect to on the remctl server.  Defaults to I<cmdb>.
+
+=item I<ACTION>
+
+The action to take on the service on the remctl server.  Defaults to
+I<register>.
+
+=back
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-d>, B<--debug>
+
+Print (minimal) debugging information about the run.
+
+=item B<-h>, B<--help>
+
+Prints out the synopsis information and exits.
+
+=item B<--man>
+
+Prints this manual page and exit.
+
+=item B<--service> I<SERVICE>
+
+=back
+
+=head1 NOTES
+
+Astute observers may note that this is *extremely* generic code, and can be
+easily adapted to submit arbitrary commands to arbitrary remctl services where
+data is accepted via STDIN.  
+
+=head1 REQUIREMENTS
+
+B<Net::Remctl>
+
+=head1 SEE ALSO
+
+cmdb-submit(1), cmdb-register(1)
+
+=head1 HOMEPAGE
+
+TBD.
+
+=head1 AUTHOR
+
+Tim Skirvin <tskirvin@stanford.edu>
+
+=head1 LICENSE
+
+Copyright 2009 Board of Trustees, Leland Stanford Jr. University
+
+This program is free software; you may redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
