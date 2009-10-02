@@ -13,6 +13,7 @@ RETVAL=0
 PROGRAM=/usr/sbin/cmdb-server
 PROGRAM_RUN=cmdb-server
 OPTIONS='--daemon'
+DEBUG_OPTS='--debug --debug --debug --debug --debug'
 USER='cmdb'
 
 # See how we were called.
@@ -37,8 +38,27 @@ case "$1" in
 	    echo
 	    ;;
     stop)
-	    echo -n "Stopping CMDB Server: "
+	    echo -n "Stopping ${NAME_HUMAN}: "
 	    pkill -f $PROGRAM_RUN
+	    RETVAL=$?
+	    if [ $RETVAL -eq 0 ]; then
+		    echo_success
+	    else
+		    echo_failure
+	    fi
+	    echo
+	    ;;
+    debug)
+        echo -n "Starting ${NAME_HUMAN} in debug mode: "
+        
+	    pkill -0 -f $PROGRAM_RUN
+	    RETVAL=$?
+	    if [ $RETVAL -eq 0 ]; then
+		    echo "already running"
+		    exit 0
+	    fi
+	
+	    setuidgid ${USER} $PROGRAM $OPTIONS $DEBUG_OPTS
 	    RETVAL=$?
 	    if [ $RETVAL -eq 0 ]; then
 		    echo_success
