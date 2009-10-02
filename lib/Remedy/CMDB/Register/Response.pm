@@ -1,12 +1,19 @@
 package Remedy::CMDB::Register::Response;
-our $VERSION = "0.01.01";
+our $VERSION = "1.00.00";
 # Copyright and license are in the documentation below.
 
 =head1 NAME
 
+Remedy::CMDB::Register::Response - XML responses to a registration request
+
 =head1 SYNOPSIS
 
+    use Remedy::CMDB::Register;
+
 =head1 DESCRIPTION
+
+Remedy::CMDB::Register::response is a simple sub-class of
+B<Remedy::CMDB::Template::Response>.  
 
 =cut
 
@@ -24,8 +31,22 @@ our @ISA = qw/Remedy::CMDB::Template::Response/;
 our @EXPORT_OK = qw/exit_error exit_response/;
 
 ##############################################################################
-### Overrides ################################################################
+### Remedy::CMDB::Template::Response Overrides ###############################
 ##############################################################################
+
+=head1 FUNCTIONS
+
+=head2 B<Remedy::CMDB::Template::Response> Overrides
+
+=over 4
+
+=item tag_type 
+
+I<registerResponse>
+
+=back
+
+=cut
 
 sub tag_type { 'registerResponse' }
 
