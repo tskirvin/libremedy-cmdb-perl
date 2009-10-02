@@ -1,5 +1,5 @@
 package Remedy::Form::CMDB_Clear;
-our $VERSION = "0.50";
+our $VERSION = "0.51";
 # Copyright and license are in the documentation below.
 
 =head1 NAME
@@ -14,7 +14,7 @@ Remedy::CMDB_Clear - delete the contents of BaseElement, etc
 =head1 DESCRIPTION
 
 Remedy::Form::CMDB_Clear manages the
-I<+TEST-DeleteBaseElementAndBaseRelationship> form in Remedy, which is
+I<+CMDB-UATDeleteBaseElementBaseRelationshipRecords> form in Remedy, which is
 a specially-designed form that deletes all items in I<BaseElement> and
 I<BaseRelationship> when a new item is created (via workflow). 
 
@@ -75,7 +75,7 @@ sub field_map {
 
 =cut
 
-sub table { '+TEST-DeleteBaseElementAndBaseRelationship' }
+sub table { '+CMDB-UATDeleteBaseElementBaseRelationshipRecords' }
 
 =back
 

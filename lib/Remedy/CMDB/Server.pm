@@ -4,6 +4,8 @@ our $VERSION = "0.01.01";
 
 =head1 NAME
 
+Remedy::CMDB::Server - 
+
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
@@ -69,6 +71,10 @@ sub connect {
         my $cmdb = eval { Remedy::CMDB->connect (%args) }
             or die "couldn't create CMDB object: $@\n";
         $self->cmdb ($cmdb);
+    }
+
+    if (my $debug = $args{'debug'}) { 
+        $cmdb->config->log->more_logging ($debug) 
     }
     
     my $logger = $self->cmdb->logger_or_die;
@@ -150,21 +156,23 @@ sub disconnect {
     close $fh;
 }
 
+=item process (CLIENT, XML)
+
+=cut
+
 sub process {
     my ($self, $client, @xml) = @_;
     my $logger = $self->logger_or_die;
     
     my $register;
-    {   
-        local $@;
-        $register = eval { Remedy::CMDB::Client::XML->read ('xml', 
-            'type' => 'stream', 'source' => join ('', @xml)) };
-        if ($@) { 
-            $logger->fatal ("invalid XML: $@");
-            return "invalid xml: $@\n" unless $register;
-        }
+    my $register = eval { Remedy::CMDB::Client::XML->read ('xml', 
+        'type' => 'stream', 'source' => join ('', @xml)) };
+    if ($@) { 
+        $logger->fatal ("invalid XML: $@");
+        return "invalid xml: $@\n" unless $register;
     }
-    return $self->error ("could not create registration object: $@") unless $register;
+    return $self->error ("could not create registration object: $@") 
+        unless $register;
 
     my $class = $register->class;
     my $query = $register->query;
@@ -181,7 +189,7 @@ sub process {
         || return $self->exit_error ("no dataset mapping for $mdr_parent");
     $LOGGER->debug ("associated dataset is $dataset");
 
-    ## TODO: kerberos principal check
+    ## TODO: kerberos principal check goes here.
 
     my $response = $query->register_all ($self->cmdb, 
         'dataset' => $dataset, 'mdr' => $mdr_parent);
@@ -235,18 +243,13 @@ sub register {
 }
 
 ##############################################################################
-### Internal Subroutines #####################################################
-##############################################################################
-
-#sub DESTROY { 
-#    my ($self) = @_;
-#    $self->server_close if $self->socket;
-#}
-
-##############################################################################
 ### Final Documentation ######################################################
 ##############################################################################
 
+=head1 TODO
+
+Kerberos principal check.
+
+=cut
+
 1;
-
-
