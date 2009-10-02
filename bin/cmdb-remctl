@@ -130,8 +130,6 @@ Prints out the synopsis information and exits.
 
 Prints this manual page and exit.
 
-=item B<--service> I<SERVICE>
-
 =back
 
 =head1 NOTES

@@ -12,7 +12,7 @@ B<remctl cmdb cmdb register> cmdb register < I<XML>
 =head1 DESCRIPTION
 
 B<cmdb-register> takes an XML-formatted registration, parses the request to
-confirm that the XML is valid, and passes it off to the local remedy-cmdb
+confirm that the XML is valid, and passes it off to the local cmdb-server
 service (along with a set of environment variables); it then returns an
 XML-formatted response.  It is meant for use with B<remctl>, so that clients
 can issue arbitrary registrations.
@@ -131,11 +131,12 @@ sub exit_error {
 
 =head1 REQUIREMENTS
 
-B<Remedy::CMDB>
+B<Remedy::CMDB::Client>, B<Remedy::CMDB::Register::Response>, B<XML::Twig>,
+B<XML::Writer::Raw>
 
 =head1 SEE ALSO
 
-cmdb-query(1)
+cmdb-query(1), cmdb-submit(1), cmdb-server(3)
 
 =head1 TODO
 

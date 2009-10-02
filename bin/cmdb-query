@@ -23,10 +23,6 @@ arbitrary queries.
 ### Configuration ############################################################
 ##############################################################################
 
-## Modify and uncomment this to use user modules instead of system-wide
-## ones.  You'll need this unless you're installing as root.
-# use lib '/FULL/PATH/TO/PERL/MODULES';
-
 ## Print debugging information?  Set with '--debug', can be set many times
 our $DEBUG = 0;
 

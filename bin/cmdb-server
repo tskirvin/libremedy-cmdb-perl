@@ -9,9 +9,14 @@ cmdb-server - maintain an active connection to the Remedy CMDB
 
 B<cmdb-server> [--debug]
 
+B<cmdb-server> --daemon
+
 =head1 DESCRIPTION
 
-[...]
+cmdb-server is a daemon that does three things: it listens for input XML on a
+unix-domain socket, it maintains an ongoing connection to the Remedy CMDB into
+which the data is passed, and it logs information about how this data flow is
+working.  This effectively offers a static version of cmdb-submit(1).
 
 =cut
 
@@ -19,29 +24,24 @@ B<cmdb-server> [--debug]
 ### Configuration ############################################################
 ##############################################################################
 
-## Modify and uncomment this to use user modules instead of system-wide
-## ones.  You'll need this unless you're installing as root.
-# use lib '/FULL/PATH/TO/PERL/MODULES';
+### How many seconds should we wait for a single spawned process to run?
+our $ALARM = 60;
+
+## Should we start out running as a daemon?  Set with '--daemon'.
+our $DAEMON = 0;
 
 ## Print debugging information?  Set with '--debug', can be set many times
 our $DEBUG = 0;
 
 ## How many children should we allow running at a time?  This also works
 ## out to the maximum number of processes.
-our $KIDS_MAX = 5;
-
-## How long should it take before a connection times out?  This should be
-## set to slightly below the lower-bound of the timeouts of any of the
-## servers you connect to; the number is in seconds.
-our $TIMEOUT = 10;
-
-### How many seconds should we wait for a single spawned process to run?
-our $ALARM = 60;
+our $KIDS_MAX = 1;
 
 ## Maximum number of times to retry a server connection.
 our $MAX_RETRY = 10;
 
-our $DAEMON = 0;
+## How long should it take before a connection times out?  In seconds.
+our $TIMEOUT = 10;
 
 ##############################################################################
 ### Declarations #############################################################
@@ -99,7 +99,6 @@ our $CHILDREN = 0;
 my $socket = $server->socket;
 
 # Accept and process the connections
-
 while (1) { 
     last if ($TIME_TO_DIE);
     my $client = $server->socket->accept;
@@ -202,11 +201,27 @@ sub signal_handler { $TIME_TO_DIE++ }
 ### Final Documentation ######################################################
 ##############################################################################
 
+=head1 TODO
+
+Right now, more than one connection at a time doesn't work that well.  This
+doesn't seem to be much of a problem, but it'd be nice if we could make things
+work properly.
+
+Should daemon mode be the default?
+
 =head1 REQUIREMENTS
+
+B<IO::Socket>, B<Remedy::CMDB::Server>
 
 =head1 SEE ALSO
 
-=head1 TODO
+B<Remedy::CMDB::Config>
+
+cmdb-register(1), cmdb-submit(1)
+
+=head1 HOMEPAGE
+
+TBD.
 
 =head1 AUTHOR
 

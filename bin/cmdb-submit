@@ -1,26 +1,40 @@
 #!/usr/bin/perl
+# Copyright and license are in the documentation below.
+
+=head1 NAME
+
+cmdb-submit - submit data straight to the CMDB
+
+=head1 SYNOPSIS
+
+B<cmdb-submit> < I<XML>
+
+=head1 
+
+cmdb-submit takes a pice of XML on STDIN, loads it into
+B<Remedy::CMDB::Register>, and registers the resulting data structure with the
+database.  It does this directly, without the client-server interface used by
+B<cmdb-server> and B<cmdb-register>.  It is therefore useful for larger runs,
+and/or any situation where less complexity is better.
+
+=cut
 
 ##############################################################################
 ### Configuration ############################################################
 ##############################################################################
 
-use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-perl/lib";
-use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib";
-
 ## Print debugging information?  Set with '--debug', can be set many times
-our $DEBUG = 5;
+our $DEBUG = 0;
 
 ##############################################################################
 ### Declarations #############################################################
 ##############################################################################
 
 use strict;
-# use warnings;
+use warnings;
 
 use Getopt::Long;
-use Lingua::EN::Inflect qw/inflect/;
 use Pod::Usage;
-use Remedy::CMDB::Global;
 use Remedy::CMDB::Register;
 use Remedy::CMDB::Register::Response;
 use Remedy::CMDB;
@@ -53,7 +67,7 @@ my $register = eval { Remedy::CMDB::Register->read ('xml', 'type' => 'stream',
 exit_error ("could not read registration source: $@") unless $register;
 
 $LOGGER->debug (sprintf ("parsed registration XML: %d items, %d relationships",
-    scalar $register->items, scalar $register->relationships));
+    scalar $register->items || 0, scalar $register->relationships || 0));
 
 ## Make sure the mdrId is set; we'll match it in a second
 my $mdr_parent = $register->mdrId || exit_error ("no mdrId in source XML");
@@ -69,15 +83,19 @@ $LOGGER->debug ("skipping kerberos principal check for now");
 
 ## Finally, we can create our Remedy connection
 $LOGGER->debug ("connecting to CMDB");
-my $cmdb = eval { Remedy::CMDB->connect ('config' => $config) }
-    || exit_error ("couldn't create CMDB object: $@");
+my $cmdb = eval { Remedy::CMDB->connect ('config' => $config, 
+    'debug' => $DEBUG) } || exit_error ("couldn't create CMDB object: $@");
 exit_error ($@) if $@;
 
-
+## Actually perform the registration.
 my $response = $register->register_all ($cmdb, 'dataset' => $dataset, 
     'mdr' => $mdr_parent);
 
-exit_response ($response);
+## Let the response print its output and exit.
+$response->exit_response;
+
+## We shouldn't have gotten here.
+exit 1;
 
 ##############################################################################
 ### Subroutines ##############################################################
@@ -89,8 +107,6 @@ sub exit_error {
     Remedy::CMDB::Register::Response->exit_error ($error)
 }
 
-sub exit_response { my $response = shift; $response->exit_response (@_) }
-
 sub error_usage {
     my ($error) = @_;
     $LOGGER->error ($error);
@@ -98,5 +114,50 @@ sub error_usage {
 }
 
 ##############################################################################
-### Documentation ############################################################
+### Final Documentation ######################################################
 ##############################################################################
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-d>, B<--debug>
+
+Increase the debugging level of the run.  Can be added multiple times, each of
+which will add significant additional debug info.
+
+=item B<-h>, B<--help>
+
+Prints out the synopsis information and exits.
+
+=item B<--man>
+
+Prints this manual page and exit.
+
+=back
+
+=head1 REQUIREMENTS
+
+B<Remedy::CMDB>, B<Remedy::CMDB::Register>,
+B<Remedy::CMDB::Register::Response>
+
+=head1 SEE ALSO
+
+cmdb-server(3), cmdb-register(1)
+
+=head1 HOMEPAGE
+
+TBD.
+
+=head1 AUTHOR
+
+Tim Skirvin <tskirvin@stanford.edu>
+
+=head1 LICENSE
+
+Copyright 2009 Board of Trustees, Leland Stanford Jr. University
+
+This program is free software; you may redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut

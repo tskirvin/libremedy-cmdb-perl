@@ -1,21 +1,33 @@
 #!/usr/bin/perl
 # Copyright and license are in the documentation below.
 
-##############################################################################
-### Configuration
-##############################################################################
+=head1 NAME
 
-## Modify and uncomment this to use user code instead of just system-wide
-## modules, or to use development versions.
-# use lib '/FULL/PATH/TO/PERL/MODULES';
-use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-perl/lib";
-use lib "/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib";
+cmdb-clear - clears BaseObject/BaseRelationship tables
+
+=head1 SYNOPSIS
+
+B<cmdb-clear> MDRID REASON
+
+=head1 DESCRIPTION
+
+cmdb-clear takes advantage of the business logic in the table stored in
+B<Remedy::Form::CMDB_Clear> to wipe all data stored in the BaseElement and 
+BaseRelationship tables.
+
+Yes, this is deliberately obscure.
+
+=cut
+
+##############################################################################
+### Configuration ############################################################
+##############################################################################
 
 ## Print debugging information?  Set with '--debug', can be set many times
 our $DEBUG = 0;
 
 ##############################################################################
-### Declarations
+### Declarations #############################################################
 ##############################################################################
 
 use strict;
@@ -25,15 +37,12 @@ use Getopt::Long qw/GetOptions/;
 use Pod::Usage;
 use Remedy;
 use Remedy::Form::CMDB_Clear;
-use Text::Wrap;
 
 $0 =~ s%.*/%%g;     # Lose the annoying path information
 $|++;               # Flush output
 
-use vars qw/$USER $GROUP/;
-
 ##############################################################################
-### main ()
+### main () ##################################################################
 ##############################################################################
 
 my $logger = Remedy::Log->get_logger;
@@ -64,24 +73,8 @@ if (my $return = $delete->save) {
 }
 
 ##############################################################################
-### Documentation
+### Final Documentation ######################################################
 ##############################################################################
-
-=head1 NAME
-
-cmdb-clear - clears BaseObject/BaseRelationship tables
-
-=head1 SYNOPSIS
-
-B<cmdb-clear> MDRID REASON
-
-=head1 DESCRIPTION
-
-cmdb-clear takes advantage of the business logic in the table stored in
-B<Remedy::Form::CMDB_Clear> to wipe all data stored in the BaseElement and 
-BaseRelationship tables.
-
-Yes, this is deliberately obscure.
 
 =head1 OPTIONS
 
