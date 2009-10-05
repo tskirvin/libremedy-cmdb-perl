@@ -66,12 +66,9 @@ sub connect {
     my $self = $class->new ();
 
     $LOGGER->debug ("creating Remedy::CMDB object");
-    { 
-        local $@;
-        my $cmdb = eval { Remedy::CMDB->connect (%args) }
-            or die "couldn't create CMDB object: $@\n";
-        $self->cmdb ($cmdb);
-    }
+    my $cmdb = eval { Remedy::CMDB->connect (%args) }
+        or die "couldn't create CMDB object: $@\n";
+    $self->cmdb ($cmdb);
 
     if (my $debug = $args{'debug'}) { 
         $cmdb->config->log->more_logging ($debug) 
@@ -81,16 +78,13 @@ sub connect {
     my $config = $self->cmdb->config_or_die;
 
     $logger->debug ("creating local socket connection");
-    { 
-        local $@;
-        my $socket_file = $config->socket_file 
-            or $logger->logdie ("no socket file");
-        my $socket = eval { $self->server_open ($socket_file) };
-        unless ($socket && ref $socket) { 
-            $@ =~ s/ at .*$//;
-            $logger->error ($socket) if $socket;
-            $logger->logdie ("error on socket_open: $@");
-        }
+    my $socket_file = $config->socket_file 
+        or $logger->logdie ("no socket file");
+    my $socket = eval { $self->server_open ($socket_file) };
+    unless ($socket && ref $socket) { 
+        $@ =~ s/ at .*$//;
+       $logger->error ($socket) if $socket;
+       $logger->logdie ("error on socket_open: $@");
     }
 
     return $self;
@@ -164,7 +158,6 @@ sub process {
     my ($self, $client, @xml) = @_;
     my $logger = $self->logger_or_die;
     
-    my $register;
     my $register = eval { Remedy::CMDB::Client::XML->read ('xml', 
         'type' => 'stream', 'source' => join ('', @xml)) };
     if ($@) { 

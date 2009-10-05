@@ -23,10 +23,6 @@ can issue arbitrary registrations.
 ### Configuration ############################################################
 ##############################################################################
 
-## Modify and uncomment this to use user modules instead of system-wide
-## ones.  You'll need this unless you're installing as root.
-# use lib '/FULL/PATH/TO/PERL/MODULES';
-
 ## Print debugging information?  Set with '--debug', can be set many times
 our $DEBUG = 0;
 
@@ -44,8 +40,6 @@ use Getopt::Long;
 use Pod::Usage;
 use Remedy::CMDB::Client;
 use Remedy::CMDB::Register::Response;
-use XML::Twig;
-use XML::Writer::Raw;
 
 $0 =~ s%.*/%%g;     # Lose the annoying path information
 $|++;               # Flush output
@@ -61,14 +55,13 @@ my $result = $parser->getoptions (
     'h|help'        => sub { pod2usage (-verbose => 1) });
 exit_error ('bad command-line options') unless $result;
 
-# just make sure the XML is good
-my $twig = XML::Twig->new ('no_prolog' => 1);
-$twig->safe_parse (join ('', <STDIN>)) || exit_error ('bad input XML');
+my $string = eval { Remedy::CMDB::Client->create_xml_string (\*STDIN) };
+exit_error ($@) if $@;
+exit_error ("no XML string") unless $string;
 
+## don't start the alarm until after we've parsed the string
 $SIG{ALRM} = sub { exit_error ("$0: timeout ($ALARM seconds)") };
 alarm $ALARM;
-
-my $string = create_xml_string ($twig);
 
 my $client = eval { Remedy::CMDB::Client->connect ('DEBUG' => $DEBUG) }
     or exit_error ("couldn't connect to CMDB: $@\n");
@@ -77,45 +70,14 @@ my $socket = $client->socket;
 print $socket $string;
 $socket->shutdown (1);  # no more writing
 while (<$socket>) { print }
-$socket->close;
+
+$client->client_close;
 
 exit 0;
 
 ##############################################################################
 ### Subroutines ##############################################################
 ##############################################################################
-
-### create_xml_string
-# Given an XML::Twig, creates and returns a string containing a full
-# 'cmdb-client' XML fragment.  Uses XML::Writer::Raw.
-## TODO: we might want to move this to a sub-module somewhere.
-sub create_xml_string {
-    my ($twig) = @_;
-    my $string;
-    my $writer = XML::Writer::Raw->new ('OUTPUT' => \$string, 
-        'DATA_INDENT' => 4, 'NEWLINES' => 0, 'DATA_MODE' => 1, 'UNSAFE' => 1);
-    $writer->xmlDecl ();
-    $writer->startTag ('cmdb-client');
-    { 
-        $writer->startTag ('environment');
-        foreach my $key (sort keys %ENV) {
-            $writer->dataElement ($key, $ENV{$key});
-        }
-        $writer->endTag;
-
-        my %args = ('pretty_print' => 'indented');  # was indented_a
-        $writer->startTag ('request');
-        $writer->setDataIndent ($writer->getDataIndent + 4);  ## HACK
-        $writer->write_raw_with_format ($twig->sprint (%args));
-        $writer->setDataIndent ($writer->getDataIndent - 4);  ## HACK
-        $writer->endTag ('request');
-
-    } 
-    $writer->endTag;
-    $writer->end;
-
-    return $string;
-}
 
 ## exit with an error
 sub exit_error { 
@@ -131,8 +93,7 @@ sub exit_error {
 
 =head1 REQUIREMENTS
 
-B<Remedy::CMDB::Client>, B<Remedy::CMDB::Register::Response>, B<XML::Twig>,
-B<XML::Writer::Raw>
+B<Remedy::CMDB::Client>, B<Remedy::CMDB::Register::Response>
 
 =head1 SEE ALSO
 
