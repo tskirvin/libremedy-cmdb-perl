@@ -1,5 +1,5 @@
 package Remedy::CMDB::Template::Response;
-our $VERSION = "0.01.01";
+our $VERSION = "0.50.00";
 # Copyright and license are in the documentation below.
 
 =head1 NAME
@@ -8,9 +8,50 @@ Remedy::CMDB::Template::Response - template for XML responses
 
 =head1 SYNOPSIS
 
+The contents of the package:
+
+    package Remedy::CMDB::Sample::Response;
+
     use Remedy::CMDB::Template::Response;
+    use Exporter;
+
+    our @ISA       = qw/Remedy::CMDB::Template::Response/;
+    our @EXPORT_OK = qw/exit_error exit_response/;
+
+    sub tag_type { 'sampleResponse' }
+
+In the script:
+
+    use Remedy::CMDB::Sample::Response;
+    my $response = Remedy::CMDB::Sample::Response->new;
+    $response->add_error ('global', "generic and fake error");
+    return scalar $response->xml;
 
 =head1 DESCRIPTION
+
+Remedy::CMDB::Template::Response offers a template for XML responses to CMDB
+requests.  The general format of this response looks like this (using a
+'registerResponse' as an example):
+
+    <registerResponse>
+        <registerInstanceResponse>
+            <instanceId>cmdbf:MdrScopedIdType</instanceId>
+            <accepted>
+                <alternateInstanceId>
+                    cmdbf:MdrScopedIdType
+                </alternateInstanceId> *
+                <notes>
+                    list-of-changes
+                </notes> ?
+            </accepted> ?
+            <declined>
+                <reason>xs:string</reason> *
+            </declined> ?
+        <registerInstanceResponse> *
+    </registerResponse>
+
+Remedy::CMDB::Template::Response is implemented as a B<Class::Struct> object
+with some additional functions.
 
 =cut
 
@@ -22,41 +63,51 @@ use strict;
 use warnings;
 
 use Remedy::CMDB::Global;
+use Remedy::CMDB::Struct;
 
 use Remedy::CMDB::Struct qw/init_struct/;
 our @ISA = init_struct (__PACKAGE__);
 
 ##############################################################################
-### Subroutines ##############################################################
+### Class::Struct Accessors ##################################################
 ##############################################################################
 
 =head1 FUNCTIONS
 
-=cut
-
-##############################################################################
-### Base Operations ##########################################################
-##############################################################################
-
-=head2 Base Operations
-
-=over 4
-
-=item fields ()
-
-[...]
+=head2 B<Class::Struct Accessors>
 
 =over 4
 
 =item instance (@)
 
-=back
+Contains an array of objects, each of which is the response to a single action
+- that is, a B<Remedy::CMDB::Global::Response> or
+B<Remedy::CMDB::Item::Response> object.  More generally, they should all be 
+B<Remedy::CMDB::Template::ResponseItem> objects.  
 
 =cut
 
 sub fields {
     'instance' => '@',
 }
+
+=back
+
+=cut
+
+##############################################################################
+### Remedy::CMDB::Struct Overrides ###########################################
+##############################################################################
+
+=head2 B<Remedy::CMDB::Struct> Overrides
+
+These functions are documented in more detail in the B<Remedy::CMDB::Struct>
+class.  Sub-classes of the template will probably want to override those
+functions labelled 'stub'.
+
+=over 4
+
+=item fields 
 
 =item clear_object ()
 
@@ -70,7 +121,9 @@ sub clear_object {
 
 =item populate_xml (XML)
 
-Takes an XML::Twig::Elt object I<XML> [...]
+Stub.  Should confirm the tag type, clear the object, and populate it from the
+B<XML::Twig> object I<XML>.  As we don't know what we're looking for in the
+template, we'll only do the first two items.
 
 =cut
 
@@ -82,66 +135,40 @@ sub populate_xml {
 
     $self->clear_object;
 
-    my @items;
-    foreach my $instance ($self->children ('instanceResponse')) {
-        my $obj = Remedy::CMDB::Item::Response->read ('xml', 
-                'source' => $instance, 'type' => 'object');
-        return "no object created" unless $obj;
-        return $obj unless ref $obj;
-        push @items, $obj;
-    }
-    foreach my $instance ($self->children ('relationshipResponse')) {
-        my $obj = Remedy::CMDB::Relationship::Response->read ('xml', 
-                'source' => $instance, 'type' => 'object');
-        return "no object created" unless $obj;
-        return $obj unless ref $obj;
-        push @items, $obj;
-    }
-    foreach my $instance ($self->children ('deregisterResponse')) {
-        my $obj = Remedy::CMDB::DeregisterResponse->read ('xml', 
-                'source' => $instance, 'type' => 'object');
-        return "no object created" unless $obj;
-        return $obj unless ref $obj;
-        push @items, $obj;
-    }
-    $self->instance (\@items);
-
     return;
 }
 
-=back
-
-=cut
-
-##############################################################################
-### Functions To Override ####################################################
-##############################################################################
-
-=head2 Functions To Override
-
-=over 4
-
 =item tag_type ()
 
-Returns 'response'.  Should be over
+Stub.  Defaults to I<invalid response tag>, which is invalid XML.
 
 =cut
 
-sub tag_type { 'invalid tag' }
+sub tag_type { 'invalid response tag' }
 
 =back
 
 =cut
 
 ##############################################################################
-### Item Functionality #######################################################
+### Error Management #########################################################
 ##############################################################################
 
-=head2 Item Functionality
+=head2 Error Management 
 
 =over 4
 
 =item add_instance (TYPE, ITEM, TEXT)
+
+Adds a new item to the B<instance ()> array.
+
+I<ITEM> is the source of the response - e.g., a B<Remedy::CMDB::Item> object -
+or, if we are just offered a string, we'll create a new B<Remedy::CMDB::Global>
+object instead.  The actual response is then created using the B<response ()>
+function on that object, and then populated with I<TYPE>, I<ITEM>, and I<TEXT>
+using B<populate ()>.
+
+Returns an error message on failure, or undef on success.
 
 =cut
 
@@ -149,12 +176,13 @@ sub add_instance {
     my ($self, $type, $item, $text, @args) = @_;
     my $obj = ref $item ? $item->response
                         : Remedy::CMDB::Global->new->response;
-     
-    my $error = $obj->populate ('item' => $item, 'type' => $type, 
+
+    my $error = $obj->populate ('item' => $item, 'type' => $type,
         'string' => $text, @args);
     return $error if $error;
     my $current = $self->instance;
     $self->instance (scalar @$current, $obj);
+    return;
 }
 
 =item add_accepted (ITEM, TEXT)
@@ -162,6 +190,9 @@ sub add_instance {
 =item add_declined (ITEM, TEXT)
 
 =item add_error (ITEM, TEXT)
+
+Invokes B<add_instance ()> with I<accepted>, I<declined>, or I<error> as
+I<TYPE>, respectively.  
 
 =cut
 
@@ -179,9 +210,16 @@ sub add_error    { shift->add_instance ('error',    @_) }
 
 =head2 Exported Functions
 
+These functions are exported (using B<Exporter)> if specifically requested.
+They can be used as helpful failure scripts in invoking scripts.
+
 =over 4
 
-=item exit_error ()
+=item exit_error (TEXT, ARGHASH)
+
+Exit the script with an error.  We do this cleanly, by creating a new object,
+add a global error message (based on I<TEXT>), and 
+invoking B<exit_response ('FATAL' => 1, ARGHASH)>).
 
 =cut
 
@@ -193,6 +231,17 @@ sub exit_error {
 }
 
 =item exit_response (ARGHASH)
+
+Prints the current XML to STDOUT, and exits.  Takes the following from the
+argument hash I<ARGHASH>:
+
+=over 4
+
+=item FATAL I<INT>
+
+If set, then we will exit with error code 1 (instead of 0).
+
+=back
 
 =cut
 
@@ -209,5 +258,38 @@ sub exit_response {
 ##############################################################################
 ### Final Documentation ######################################################
 ##############################################################################
+
+=head1 NOTES
+
+The original specification for the response came from the 'registration
+response' section of the CMDB techspecs page:
+
+    https://ikiwiki.stanford.edu/projects/cmdb/techspecs/
+
+A few changes have been made.  The two most prominent: the specification was
+somewhat enhanced to handle responses in other areas (especially 'global'
+responses), and the 'notes' field was added to explain why a change was
+accepted.
+
+=head1 REQUIREMENTS
+
+B<Remedy::CMDB::Global>, B<Remedy::CMDB::Struct>
+
+=head1 HOMEPAGE
+
+TBD.
+
+=head1 AUTHOR
+
+Tim Skirvin <tskirvin@stanford.edu>
+
+=head1 LICENSE
+
+Copyright 2009 Board of Trustees, Leland Stanford Jr. University
+
+This program is free software; you may redistribute it and/or modify it under
+the same terms as Perl itself.
+
+=cut
 
 1;

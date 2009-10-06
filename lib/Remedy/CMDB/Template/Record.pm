@@ -3,16 +3,51 @@ our $VERSION = "0.01";
 
 =head1 NAME
 
+Remedy::CMDB::Template::Record - template for storing CMDB information
+
 =head1 SYNOPSIS
+
+The contents of the package:
+
+    package Remedy::CMDB::Sample::Record;
+
+    use Remedy::CMDB::Template::ID;
+    our @ISA = qw/Remedy::CMDB::Template::ID/;
+
+    sub tag_type { 'sampleRecord' }
 
 =head1 DESCRIPTION
 
+Remedy::CMDB::Template::Record offers a consistent template for managing
+information about a single record - specifically, the datatype, a number of
+data fields with values, and a number of metadata fields with values.  For
+example, say the XML looks like this (using 'record' as an example):
+
+    <record>
+        <computerSystem>
+            <AssetClass>Hardware</AssetClass>
+            <HostName>pchg-web1.stanford.edu</HostName>
+            <Model>PowerEdge 1750</Model>
+            <Name>pchg-web1.stanford.edu</Name>
+            <PrimaryCapability>Server</PrimaryCapability>
+            <SerialNumber>6ZYMF51</SerialNumber>
+            <ShortDescription>pchg-web1.stanford.edu</ShortDescription>
+            <firmware_version></firmware_version>
+        </computerSystem>
+        <recordMetadata>
+            <recordClass>Production</recordClass>
+            <recordId />
+        </recordMetadata>
+    </record>
+
+In this case, the datatype is 'computerSystem'; there is data for the
+'AssetClass', 'HostName', 'Model', etc fields; and there is metadata for
+'recordClass' and 'recordId'.
+
+Remedy::CMDB::Template::Record is implemented as a B<Class::Struct> object with
+some additional functions.
+
 =cut
-
-##############################################################################
-### Configuration ############################################################
-##############################################################################
-
 
 ##############################################################################
 ### Declarations #############################################################
@@ -25,22 +60,66 @@ use Remedy::CMDB::Struct qw/init_struct/;
 our @ISA = init_struct (__PACKAGE__);
 
 ##############################################################################
-### Methods ##################################################################
+### Class::Struct Accessors ##################################################
 ##############################################################################
 
 =head1 FUNCTIONS
 
+=head2 B<Class::Struct Accessors>
+
 =over 4
+
+=item data (%)
+
+Contains a set of key/value pairs containing all primary data about the object.
+
+=item datatype ($)
+
+Stores the 'class' of the data.
+
+=item meta (%)
+
+Contains a set of key/value pairs containing metadata about the object.  
 
 =cut
 
 sub fields {
-    'meta' => '%',
+    'data'     => '%',
     'datatype' => '$',
-    'data' => '%',
+    'meta'     => '%',
+}
+
+##############################################################################
+### Remedy::CMDB::Struct Overrides ###########################################
+##############################################################################
+
+=head2 B<Remedy::CMDB::Struct> Overrides
+
+These functions are documented in more detail in the B<Remedy::CMDB::Struct>
+class.  Sub-classes of the template will probably want to override those
+functions labelled 'stub'.
+
+=over 4
+
+=item fields ()
+
+=item clear_object ()
+
+=cut
+
+sub clear_object {
+    my ($self) = @_;
+    $self->meta ({});
+    $self->data ({});
+    $self->datatype (undef);
+    return;
 }
 
 =item populate_xml (XML)
+
+Confirms the tag type, clears the object, and populates from B<XML::Twig>
+object I<XML>.  We parse the information from the 
+<mdrId> and <localId>; if either is missing, then we return with an error.
 
 =cut
 
@@ -75,27 +154,18 @@ sub populate_xml {
     return;
 }
 
-sub clear_object {
-    my ($self) = @_;
-    $self->meta ({});
-    $self->data ({});
-    $self->datatype (undef);
-    return;
-}
+=item tag_type ()
 
-=back
+Stub.  Defaults to I<invalid record tag>, which is invalid XML.
 
 =cut
 
-##############################################################################
-### Reporting Functions ######################################################
-##############################################################################
-
-=head2 Reporting Functions
-
-=over 4
+sub tag_type { "invalid record tag" } 
 
 =item text ()
+
+Returns a formatted array or string containing (in order) the data type, the
+real data, and the metadata.
 
 =cut
 
@@ -122,36 +192,9 @@ sub text {
     return wantarray ? @return : join ("\n", @return, '');
 }
 
-=item xml ()
-
-=cut
-
-sub xml_old  {
-    my ($self) = @_;
-    return 'not done yet';
-}
-
 =back
 
 =cut
-
-##############################################################################
-### Stubs ####################################################################
-##############################################################################
-
-=head2 Stubs
-
-These functions are stubs; the real work is implemented by the sub-functions.
-
-=over 4
-
-=item tag_type 
-
-=back
-
-=cut
-
-sub tag_type { "not implemented" } 
 
 ##############################################################################
 ### Final Documentation ######################################################
@@ -159,7 +202,7 @@ sub tag_type { "not implemented" }
 
 =head1 REQUIREMENTS
 
-=head1 SEE ALSO
+B<Remedy::CMDB::Struct>
 
 =head1 AUTHOR
 

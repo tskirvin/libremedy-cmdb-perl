@@ -1,22 +1,69 @@
 package Remedy::CMDB::Template::ResponseItem;
-our $VERSION = "0.01.01";
+our $VERSION = "0.50.00";
 # Copyright and license are in the documentation below.
 
 =head1 NAME
 
-Remedy::CMDB::Template::Response - template for XML responses to activities
+Remedy::CMDB::Template::ResponseItem - template for responses to activities
 
 =head1 SYNOPSIS
 
-    use Remedy::CMDB::Template::Response;
+The contents of the package:
+
+    package Remedy::CMDB::Sample::ResponseItem;
+
+    use Remedy::CMDB::Template::ResponseItem;
+    our @ISA = qw/Remedy::CMDB::Template::ResponseItem/;
+
+    sub tag_type { 'sampleResponse' }
 
 =head1 DESCRIPTION
 
-=cut
+Remedy::CMDB::Template::ResponseItem offers a template to generate XML 
+responses storing the results of an action against the CMDB - that is, the
+result of a registration (and, eventually, a query).  This generally means
+either a successful response that looks like this (using the
+'registerInstanceResponse' type):
 
-##############################################################################
-### Configuration ############################################################
-##############################################################################
+    <registerInstanceResponse>
+        <instanceId>
+            <localId>000011112222</localId>
+            <mdrId>http://networking.stanford.edu</mdrId>
+        </instanceId>
+        <accepted>
+            <notes>no changes</notes>
+            <alternateInstanceId>
+                <localId>1254855204.000011112222@http://networking.stanford.edu</localId>
+                <mdrId>MDR.IMPORT.NETWORKING</mdrId>
+            </alternateInstanceId>
+        </accepted>
+    </registerInstanceResponse>
+
+...or a failure like this:
+
+    <registerInstanceResponse>
+        <instanceId>
+            <localId>173.64.10.0-23</localId>
+            <mdrId>http://networking.stanford.edu</mdrId>
+        </instanceId>
+        <declined>
+            <reason>failed to translate MDR info: [...]</reason>
+        </declined>
+    </registerInstanceResponse>
+
+Or, if there's a global failure, it will look like this:
+
+    <globalResponse>
+        <dataSource>GLOBAL</dataSource>
+        <declined>
+            <reason>bad input XML</reason>
+        </declined>
+    </globalResponse>
+
+Remedy::CMDB::Template::ResponseItem is implemented as a B<Class::Struct>
+object with some additional functions.
+
+=cut
 
 ##############################################################################
 ### Declarations #############################################################
@@ -31,6 +78,47 @@ use Remedy::CMDB::Struct qw/init_struct/;
 our @ISA = init_struct (__PACKAGE__);
 
 ##############################################################################
+### Class::Struct Accessors ##################################################
+##############################################################################
+
+=head1 FUNCTIONS
+
+=head2 B<Class::Struct Accessors>
+
+=over 4
+
+=item alternateId (@)
+
+An array of alternate instance IDs, where the data was actually stored.  Used 
+with type I<accepted>.
+
+=item source_data ($)
+
+Either a reference to the item that we're generating this response from, or the
+string 'GLOBAL'.
+
+=item string ($)
+
+A string explaining the reason for failure or note about the success.
+
+=item type ($)
+
+The type of response.  We recognize I<accepted>, I<declined>, and I<error>.
+
+=cut
+
+sub fields {
+    'alternateId' => '@',
+    'source_data' => '$',
+    'string'      => '$',
+    'type'        => '$',
+}
+
+=back
+
+=cut
+
+##############################################################################
 ### Subroutines ##############################################################
 ##############################################################################
 
@@ -40,16 +128,21 @@ our @ISA = init_struct (__PACKAGE__);
 
 =item fields ()
 
+=item clear_object ()
+
 =cut
 
-sub fields {
-    'source_data' => '$',
-    'string'      => '$',
-    'type'        => '$',
-    'alternateId' => '@',
+sub clear_object {
+    my ($self) = @_;
+    $self->alternateId ([]);
+    $self->source_data (undef);
+    $self->string      (undef);
+    return;
 }
 
 =item populate_xml (XML)
+
+Parses the XML.  Not well tested, to be honest.
 
 =cut
 
@@ -105,6 +198,22 @@ sub populate_xml {
     return;
 }
 
+=item tag_type ()
+
+Stub.  Defaults to I<invalid responseItem tag>, which is invalid XML.
+
+=cut
+
+sub tag_type { 'invalid responseItem tag' }
+
+=item xml ()
+
+Returns an XML representation of the object, using B<XML::Writer::Raw>.  We use
+this instead of the default because this information is simply more dynamic and
+difficult to represent than usual.
+
+=cut
+
 sub xml {
     my ($self, @args) = @_;
 
@@ -154,6 +263,22 @@ sub xml {
     return $string;
 }
 
+=back
+
+=cut
+
+##############################################################################
+### Additional Functions #####################################################
+##############################################################################
+
+=head2 Additional Functions 
+
+=over 4
+
+=item populate (ARGHASH)
+
+=cut
+
 sub populate {
     my ($self, %args) = @_;
     return 'no item' unless my $item = $args{'item'};
@@ -166,14 +291,6 @@ sub populate {
     elsif ($type eq 'declined') { return $self->populate_declined (%args) }
     elsif ($type eq 'error')    { return $self->populate_error    (%args) }
     else                        { return "invalid type: $type" }
-}
-
-sub clear_object {
-    my ($self) = @_;
-    $self->alternateId ([]);
-    $self->source_data (undef);
-    $self->string      (undef);
-    return;
 }
 
 =item populate_accepted (ARGHASH)
@@ -199,12 +316,20 @@ sub populate_accepted {
     return;
 }
 
+=item populate_declined (ARGHASH)
+
+=cut
+
 sub populate_declined {
     my ($self, %args) = @_; 
     $self->type ('declined');
     $self->string ($args{'string'});
     return;
 }
+
+=item populate_error (ARGHASH)
+
+=cut
 
 sub populate_error { 
     my ($self, %args) = @_;
@@ -213,24 +338,6 @@ sub populate_error {
     return;
 }
 
-##############################################################################
-### Stubs ####################################################################
-##############################################################################
-
-=head2 Stubs
-
-These functions are stubs; the real work is implemented by the sub-functions.
-
-=over 4
-
-=item tag_type
-
-=back
-
-=cut
-
-sub tag_type { 'not implemented' }
-
 =back
 
 =cut
@@ -238,5 +345,26 @@ sub tag_type { 'not implemented' }
 ##############################################################################
 ### Final Documentation ######################################################
 ##############################################################################
+
+=head1 REQUIREMENTS
+
+B<Remedy::CMDB::Item::AlternateInstanceID>, B<Remedy::CMDB::Struct>
+
+=head1 SEE ALSO
+
+Remedy::CMDB::Template::Response(3)
+
+=head1 AUTHOR
+
+Tim Skirvin <tskirvin@stanford.edu>
+
+=head1 LICENSE
+
+Copyright 2009 Board of Trustees, Leland Stanford Jr. University
+
+This program is free software; you may redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
 
 1;
