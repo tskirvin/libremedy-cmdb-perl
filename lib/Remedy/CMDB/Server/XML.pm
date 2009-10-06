@@ -8,9 +8,29 @@ Remedy::CMDB::Server::XML -
 
 =head1 SYNOPSIS
 
+    use Remedy::CMDB::Server::XML;
+
 =head1 DESCRIPTION
 
-Remedy::CMDB::Server::XML parses the XML
+Remedy::CMDB::Server::XML parses the XML provided by B<Remedy::CMDB::Client>,
+and converts it to a set of environment variables and a query type.  This XML
+generally looks like this:
+
+    <cmdb-client>
+        <environment>
+            <HOME>/home/tskirvin</HOME>
+            <KRB5CCNAME>[...]</KRB5CCNAME>
+            [...]
+        </environment>
+        <request>
+            <registerRequest>
+                [...]
+            </registerRequest>
+        </request>
+    </cmdb-client>
+
+Remedy::CMDB::Item is a sub-class of B<Remedy::CMDB::Struct>, and inherits
+many functions from there.
 
 =cut
 
@@ -61,14 +81,26 @@ use Remedy::CMDB::Struct qw/init_struct/;
 our @ISA = init_struct (__PACKAGE__);
 
 ##############################################################################
-### Subroutines ##############################################################
+### Class::Struct Accessors ##################################################
 ##############################################################################
 
 =head1 FUNCTIONS
 
+=head2 B<Class::Struct Accessors>
+
 =over 4
 
-=item fields ()
+=item environment (%)
+
+Contains key/value pairs of everything set in the environment block of the XML.
+
+=item class ($)
+
+The associated class with this query type (see above).
+
+=item query ($)
+
+The actual query, generally as an object of class B<class ()>.
 
 =cut
 
@@ -76,8 +108,24 @@ sub fields {
     'environment' => '%',
     'class'       => '$',
     'query'       => '$',
-    'type'        => '$',
 }
+
+=back
+
+=cut
+
+##############################################################################
+### Remedy::CMDB::Struct Overrides ###########################################
+##############################################################################
+
+=head2 B<Remedy::CMDB::Struct> Overrides
+
+These functions are documented in more detail in the B<Remedy::CMDB::Struct>
+class.
+
+=over 4
+
+=item fields ()
 
 =item clear_object ()
 
@@ -86,25 +134,12 @@ sub fields {
 sub clear_object {
     my ($self) = @_;
     $self->environment (\{});
+    $self->class ('');
     $self->query ('');
-    $self->type  ('');
     return;
 }
 
 =item populate_xml (XML)
-
-The general XML looks like this:
-
-    <cmdb-client>
-        <environment>
-            <HOME>/home/tskirvin</HOME>
-            <KRB5CCNAME>[...]</KRB5CCNAME>
-            [...]
-        </environment>
-        <request>
-            
-        </request>
-    </cmdb-client>
 
 =cut
 
@@ -137,7 +172,6 @@ sub populate_xml {
                 'type' => 'object');
             return "no $objtype object created" unless $obj;
             $self->query ($obj);
-            $self->type ($objtype);
         }
     }
     return "no valid query found" unless $self->query;
