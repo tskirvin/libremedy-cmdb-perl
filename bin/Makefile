@@ -2,7 +2,10 @@
 REMEDY_HOME=/afs/ir/users/t/s/tskirvin/work/remedy/libremedy-perl
 REMEDY_CMDB_HOME=/afs/ir/users/t/s/tskirvin/work/remedy/libremedy-cmdb-perl
 
-XML_SUNIA=/afs/ir/group/networking/www/monitor/test/cmdb/cmdb.xml
+DEBUG=--debug --debug --debug --debug --debug
+
+XML_SUNIA=/afs/ir/service/cmdb/data/in/short.xml
+# XML_SUNIA=/afs/ir/group/networking/www/monitor/test/cmdb/cmdb.xml
 XML_WINDOWS=${REMEDY_CMDB_HOME}/sample/w.xml
 XML_TEST=${REMEDY_CMDB_HOME}/sample/1.xml
 XML=${REMEDY_CMDB_HOME}/sample/sample-reg.cmdbf.xml
@@ -23,6 +26,9 @@ current:
 
 real:
 	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/cmdb-submit < ${XML}
+
+real-debug:
+	PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/cmdb-submit ${DEBUG} < ${XML}
 
 server:
 	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/cmdb-server

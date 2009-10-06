@@ -60,8 +60,8 @@ Or, if there's a global failure, it will look like this:
         </declined>
     </globalResponse>
 
-Remedy::CMDB::Template::ResponseItem is implemented as a B<Class::Struct>
-object with some additional functions.
+Remedy::CMDB::Template::ResponseItem is implemented as a B<Remedy::CMDB::Struct>
+object.
 
 =cut
 

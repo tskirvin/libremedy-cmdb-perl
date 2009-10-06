@@ -1,8 +1,9 @@
 bin/cmdb-clear
 bin/cmdb-query
 bin/cmdb-register
+bin/cmdb-remctl
 bin/cmdb-server
-etc/init.d/cmdb-server
+etc/init.d/cmdb
 etc/remctl/conf.d/cmdb
 etc/remedy/cmdb/classes.csv
 etc/remedy/cmdb/config
@@ -27,9 +28,7 @@ lib/Remedy/CMDB/Item/Response.pm
 lib/Remedy/CMDB/Log.pm
 lib/Remedy/CMDB/Query/Response.pm
 lib/Remedy/CMDB/Register.pm
-lib/Remedy/CMDB/Register/Remedy.pm
 lib/Remedy/CMDB/Register/Response.pm
-lib/Remedy/CMDB/Register/XML.pm
 lib/Remedy/CMDB/Relationship.pm
 lib/Remedy/CMDB/Relationship/DataSource.pm
 lib/Remedy/CMDB/Relationship/InstanceId.pm
@@ -55,3 +54,5 @@ MANIFEST			This list of files
 MANIFEST.SKIP
 README
 sample/sample-reg.cmdbf.xml
+t/98_pod.t
+t/99_pod_coverage.t

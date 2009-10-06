@@ -1,20 +1,20 @@
-package Remedy::CMDB::Relationship::Response;
+package Remedy::CMDB::Template::Response::Global::Response;
 our $VERSION = "1.00";
 # Copyright and license are in the documentation below.
 
 =head1 NAME
 
-Remedy::CMDB::Relationship::Response - relationship registration response
+Remedy::CMDB::Global::Response - XML responses to a global error
 
 =head1 SYNOPSIS
 
-    use Remedy::CMDB::Relationship::Response;
+    use Remedy::CMDB::Template::Response::Global::Response;
 
 =head1 DESCRIPTION
 
-Remedy::CMDB::Relationship::Response is a simple sub-class of the template
-B<Remedy::CMDB::Template::ResponseItem>.  It is used for relationship
-registrations.
+Remedy::CMDB::Global::Response is a simple sub-class of the template
+B<Remedy::CMDB::Template::ResponseItem>.  It is used for global error
+responses, where the actual class we should be responding with is not known.
 
 =cut
 
@@ -41,11 +41,11 @@ our @ISA = qw/Remedy::CMDB::Template::ResponseItem/;
 
 =item tag_type ()
 
-I<registerInstanceResponse>
+I<globalResponse>
 
 =cut
 
-sub tag_type   { "registerInstanceResponse" }
+sub tag_type   { "globalResponse" }
 
 =back
 

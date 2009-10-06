@@ -50,8 +50,8 @@ requests.  The general format of this response looks like this (using a
         <registerInstanceResponse> *
     </registerResponse>
 
-Remedy::CMDB::Template::Response is implemented as a B<Class::Struct> object
-with some additional functions.
+Remedy::CMDB::Template::Response is implemented as a B<Remedy::CMDB::Struct>
+object.
 
 =cut
 
@@ -62,8 +62,7 @@ with some additional functions.
 use strict;
 use warnings;
 
-use Remedy::CMDB::Global;
-use Remedy::CMDB::Struct;
+use Remedy::CMDB::Template::Response::Global;
 
 use Remedy::CMDB::Struct qw/init_struct/;
 our @ISA = init_struct (__PACKAGE__);
@@ -81,7 +80,7 @@ our @ISA = init_struct (__PACKAGE__);
 =item instance (@)
 
 Contains an array of objects, each of which is the response to a single action
-- that is, a B<Remedy::CMDB::Global::Response> or
+- that is, a B<Remedy::CMDB::Template::Response::Global::Response> or
 B<Remedy::CMDB::Item::Response> object.  More generally, they should all be 
 B<Remedy::CMDB::Template::ResponseItem> objects.  
 
@@ -163,7 +162,7 @@ sub tag_type { 'invalid response tag' }
 Adds a new item to the B<instance ()> array.
 
 I<ITEM> is the source of the response - e.g., a B<Remedy::CMDB::Item> object -
-or, if we are just offered a string, we'll create a new B<Remedy::CMDB::Global>
+or, if we are just offered a string, we'll create a new B<Remedy::CMDB::Template::Response::Global>
 object instead.  The actual response is then created using the B<response ()>
 function on that object, and then populated with I<TYPE>, I<ITEM>, and I<TEXT>
 using B<populate ()>.
@@ -175,7 +174,7 @@ Returns an error message on failure, or undef on success.
 sub add_instance {
     my ($self, $type, $item, $text, @args) = @_;
     my $obj = ref $item ? $item->response
-                        : Remedy::CMDB::Global->new->response;
+                        : Remedy::CMDB::Template::Response::Global->new->response;
 
     my $error = $obj->populate ('item' => $item, 'type' => $type,
         'string' => $text, @args);
@@ -273,7 +272,7 @@ accepted.
 
 =head1 REQUIREMENTS
 
-B<Remedy::CMDB::Global>, B<Remedy::CMDB::Struct>
+B<Remedy::CMDB::Template::Response::Global>, B<Remedy::CMDB::Struct>
 
 =head1 HOMEPAGE
 

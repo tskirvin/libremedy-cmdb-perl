@@ -204,7 +204,8 @@ sub find {
     my $translate_class = $cmdb->translate_class ($class) ||
         $logger->logdie ("no translation of class '$class'");
 
-    my $instanceid = eval { $cmdb->translate_instanceid ($mdrId, $localId) };
+    my $instanceid = eval { $cmdb->translate_instanceid ($mdrId, $localId, 
+        %args) };
     if ($@) { 
         $logger->logdie ("failed to translate MDR info: $@\n") ;
     } elsif (!$instanceid) { 
@@ -306,7 +307,8 @@ sub register {
         or return "invalid class: $datatype";
 
     ## Look for existing entries.
-    my @obj = eval { $self->find ($cmdb, 'class' => $class) };
+    my @obj = eval { $self->find ($cmdb, 'class' => $class, 
+        'dataset' => $dataset) };
     if ($@) { 
         chomp $@;
         $logger->info ("find error: $@");

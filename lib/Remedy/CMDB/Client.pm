@@ -4,7 +4,7 @@ our $VERSION = "0.50.00";
 
 =head1 NAME
 
-Remedy::CMDB::Client
+Remedy::CMDB::Client - the client side of the Remedy CMDB implementation
 
 =head1 SYNOPSIS
 
@@ -114,10 +114,11 @@ How many seconds should we allow to connect to the server?  Defaults to 10.
 
 =over 4
 
-=item connect ([PORT [, ARGHASH]])
+=item connect (ARGHASH)
 
 Creates the B<Remedy::CMDB::Client> object, and connects to the unix domain
-socket at the file specified by B<socketfile ()>.  
+socket at the file specified by B<socketfile ()>.  Pulls arguments from the
+hash I<ARGHASH>:
 
 =over 4
 
@@ -127,7 +128,7 @@ Override the default timeout value.
 
 =back
 
-Returns the new B<Remedy::CMDB::Client> object on success, or does on failure.
+Returns the new B<Remedy::CMDB::Client> object on success, or dies on failure.
 
 =cut
 

@@ -1,3 +1,7 @@
 .*.sw?
 MANIFEST.bak
 /Makefile
+Makefile.old
+Remedy-CMDB-*.tar.gz
+blib/*
+.__afs*

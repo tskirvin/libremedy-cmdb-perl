@@ -1,3 +1,9 @@
+libremedy-cmdb-perl (2) UNRELEASED; urgency=low
+
+  * Code base 0.50
+
+ -- Tim Skirvin <tskirvin@stanford.edu>  Fri, 02 Oct 2009 14:01:48 -0700
+
 libremedy-cmdb-perl (1) intrepid UNRELEASED; urgency=low
 
   * Splitting off from default libremedy-perl

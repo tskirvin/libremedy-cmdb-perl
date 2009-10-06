@@ -21,11 +21,6 @@ inherits many functions from there.
 =cut
 
 ##############################################################################
-### Configuration ############################################################
-##############################################################################
-# Nothing local.
-
-##############################################################################
 ### Declarations #############################################################
 ##############################################################################
 
@@ -232,7 +227,8 @@ sub find {
     my $translate_class = $cmdb->translate_class ($class) ||
         $logger->logdie ("no translation of class '$class'");
         
-    my $instanceid = eval { $cmdb->translate_instanceid ($mdrId, $localId) };
+    my $instanceid = eval { $cmdb->translate_instanceid ($mdrId, $localId,
+        %args) };
     if ($@) { 
         $logger->logdie ("failed to translate MDR info: $@") 
     } elsif (!$instanceid) { 
@@ -336,15 +332,22 @@ sub register {
     my $baseclass = $cmdb->translate_class ('baseElement')
         or return 'invalid class: baseElement';
     
-    my $src_item = $cmdb->find_item ($source, 'class' => $baseclass,
-        'mdr_parent' => $mdr_parent) or return "source does not exist";
-    my $tgt_item = $cmdb->find_item ($target, 'class' => $baseclass, 
-        'mdr_parent' => $mdr_parent) or return "target does not exist";
+    my $src_item = eval { $cmdb->find_item ($source, 'class' => $baseclass,
+        'mdr_parent' => $mdr_parent, 'dataset' => $dataset) };
+    return "error on src search: $@" if $@;
+    return "source does not exist" unless $src_item;;
+
+    my $tgt_item = eval { $cmdb->find_item ($target, 'class' => $baseclass, 
+        'mdr_parent' => $mdr_parent, 'dataset' => $dataset) };
+    return "error on tgt search: $@" if $@;
+    return "target does not exist" unless $tgt_item;;
+    
     return 'mdrs of source and target do not match' 
-        unless $src_item->mdrId eq $tgt_item->mdrId;
+        unless $src_item->get ('DatasetId') eq $tgt_item->get ('DatasetId');
         
     ## Look for existing entries.
-    my @obj = eval { $self->find ($cmdb, 'class' => $class) };
+    my @obj = eval { $self->find ($cmdb, 'class' => $class, 
+        'dataset' => $dataset) };
     if ($@) { 
         chomp $@;
         $logger->info ("find error: $@");

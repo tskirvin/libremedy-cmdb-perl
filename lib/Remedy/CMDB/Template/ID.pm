@@ -28,8 +28,7 @@ something like this using an 'instanceId' as an example:
         <localId>test-host</localId>
     </instanceId>
 
-Remedy::CMDB::Template::ID is implemented as a B<Class::Struct> object with
-some additional functions.
+Remedy::CMDB::Template::ID is implemented as a B<Remedy::CMDB::Struct> object.
 
 =cut
 

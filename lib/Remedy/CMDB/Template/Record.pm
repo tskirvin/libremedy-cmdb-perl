@@ -44,8 +44,8 @@ In this case, the datatype is 'computerSystem'; there is data for the
 'AssetClass', 'HostName', 'Model', etc fields; and there is metadata for
 'recordClass' and 'recordId'.
 
-Remedy::CMDB::Template::Record is implemented as a B<Class::Struct> object with
-some additional functions.
+Remedy::CMDB::Template::Record is implemented as a B<Remedy::CMDB::Struct>
+object.
 
 =cut
 

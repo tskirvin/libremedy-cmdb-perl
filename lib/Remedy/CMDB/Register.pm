@@ -11,7 +11,7 @@ Remedy::CMDB::Register - CMDB registration service
     use Remedy::CMDB::Register;
     
     # $cmdb is an existing CMDB object - see Remedy::CMDB
-    my $register = eval { Remedy::CMDB::register->read ('xml', 
+    my $register = eval { Remedy::CMDB::Register->read ('xml', 
         'type' => 'stream', 'source' => \*STDIN) };
     die "could not load registration XML: $@\n" unless $register;
 
@@ -352,7 +352,7 @@ sub do_register_all {
 =head1 REQUIREMENTS
 
 B<Lingua::EN::Inflect>, B<Remedy::CMDB::Deregister::List>,
-B<Remedy::CMDB::Item::List>, Remedy::CMDB::Register::Response>,
+B<Remedy::CMDB::Item::List>, B<Remedy::CMDB::Register::Response>,
 B<Remedy::CMDB::Relationship::List>, B<Remedy::CMDB::Struct>
 
 =head1 SEE ALSO

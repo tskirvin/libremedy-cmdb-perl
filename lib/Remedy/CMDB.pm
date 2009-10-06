@@ -1,5 +1,5 @@
 package Remedy::CMDB;
-our $VERSION = "0.50.00";
+our $VERSION = "0.50.01";
 # Copyright and license are in the documentation below.
 
 =head1 NAME
@@ -314,25 +314,41 @@ sub register_translation {
     return;
 }
 
-=item translate_instanceid (MDRID, LOCALID)
+=item translate_instanceid (MDRID, LOCALID, ARGHASH)
 
 Finds the internal Instance ID used within the CMDB, based on the offered
 MDR I<MDRID> and Local ID I<LOCALID>.  If more than one match is found, then we
 die; otherwise, we return the I<Internal InstanceId> field from the data if we
 find it, or undef if nothing is found.
 
+Arguments that we follow from I<ARGHASH>:
+
+=over 4
+
+=item dataset (DATASET)
+
+The third required piece of data is the Dataset ID I<DATASET>.  If not offered,
+then we will use B<mdr_to_dataset ()> from B<Remedy::Config> to use the same
+dataset as the current MDR.
+
+=back
+
 =cut
 
 sub translate_instanceid {
-    my ($self, $mdr, $local) = @_;
+    my ($self, $mdr, $local, %args) = @_;
     my $logger = $self->logger_or_die ('no logger at item registration');
 
-    $logger->debug ("translate_instanceid ($mdr, $local)");
+    my $dataset = $args{'dataset'};
+    $dataset ||= $self->config->mdr_to_dataset ($mdr);
+    return 'no valid dataset' unless $dataset;
+    $logger->debug ("translate_instanceid ($mdr, $local, $dataset)");
 
     my $class = $self->translate_class ('translate') or return;
 
-    my %search = ('localId' => $local, 'mdrId' => $mdr);
-    my $string = "translation of $local\@$mdr";
+    my %search = ('localId' => $local, 'mdrId' => $mdr, 
+        'DatasetId' => $dataset);
+    my $string = "translation of $local\@$mdr in $dataset";
 
     $logger->debug ("searching for $string");
     my @translate = $self->read ($class, \%search);

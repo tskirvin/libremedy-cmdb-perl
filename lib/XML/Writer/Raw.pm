@@ -4,15 +4,52 @@ our $VERSION = "0.01.01";
 
 =head1 NAME
 
+XML::Writer::Raw - increased recursion functionality for XML::Writer
+
 =head1 SYNOPSIS
+
+    use XML::Writer::Raw;
+
+    # $obj is a Remedy::CMDB::Struct object
+
+    my $string;
+    my $writer = XML::Writer::Raw->new ('OUTPUT' => \$string,
+        'DATA_INDENT' => 4, 'NEWLINES' => 0, 'DATA_MODE' => 1,
+        'UNSAFE' => 1, @args);
+
+    $writer->startTag ($obj->tag_type);
+
+    my %fields = $obj->fields;
+    foreach my $field (sort keys %fields) {
+        my $data = $obj->$field;
+        my $type = $fields{$field};
+
+        if ($type eq '@') {
+            foreach my $key (@$data) {
+                $writer->write_elem_or_raw ($field, $key);
+            }
+        } elsif ($type eq '%') {
+            foreach my $key (keys %{$data}) {
+                $writer->dataElement ($key, $$data{$key});
+            }
+
+        } else {
+            $writer->write_elem_or_raw ($field, $data);
+        }
+    }
+
+    $writer->endTag;
+    $writer->end;
+
+    print $string;
 
 =head1 DESCRIPTION
 
-=cut
+This package adds a couple of sub-routines to XML::Writer to best handle the
+recursive nature of the B<Remedy::CMDB::Struct> objects.  Essentially, we use
+the B<raw ()> function a whole lot more, and with a whole lot less errors.
 
-##############################################################################
-### Configuration ############################################################
-##############################################################################
+=cut
 
 ##############################################################################
 ### Declarations #############################################################
@@ -30,11 +67,6 @@ our @ISA = qw/XML::Writer/;
 ##############################################################################
 
 =head1 FUNCTIONS
-
-=over 4
-
-This package adds a couple of sub-routines to XML::Writer to best handle the
-recursive nature of the 
 
 =over 4
 
@@ -85,5 +117,26 @@ sub write_raw_with_format {
 ##############################################################################
 ### Final Documentation ######################################################
 ##############################################################################
+
+=head1 REQUIREMENTS
+
+B<XML::Writer>
+
+=head1 HOMEPAGE
+
+TBD.
+
+=head1 AUTHOR
+
+Tim Skirvin <tskirvin@stanford.edu>
+
+=head1 LICENSE
+
+Copyright 2009 Board of Trustees, Leland Stanford Jr. University
+
+This program is free software; you may redistribute it and/or modify it under
+the same terms as Perl itself.
+
+=cut
 
 1;

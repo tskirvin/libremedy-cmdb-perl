@@ -1,12 +1,27 @@
-package Remedy::CMDB::Client::Response;
-our $VERSION = "0.01.01";
+package Remedy::CMDB::Server::Response;
+our $VERSION = "0.50";
 # Copyright and license are in the documentation below.
 
 =head1 NAME
 
+Remedy::CMDB::Server::Response - create XML responses for CMDB server
+
 =head1 SYNOPSIS
 
+    use Remedy::CMDB::Server::Response;
+
+    my $response = Remedy::CMDB::Server::Response->new;
+    $response->add_error ('global', "generic and fake error");
+    return scalar $response->xml;
+
 =head1 DESCRIPTION
+
+Remedy::CMDB::Server::Response is a sub-class of the template
+B<Remedy::CMDB::Template::Response>.  It is used by B<Remedy::CMDB::Server> to
+generate generic responses when there are high-level errors.  In general, that
+class will return errors with the classes I<queryResponse> or
+I<registerResponse> as appropriate, but if we never got far enough to know
+which one of those to generate, we use this class instead.
 
 =cut
 
@@ -27,7 +42,19 @@ our @EXPORT_OK = qw/exit_error exit_response/;
 ### Overrides ################################################################
 ##############################################################################
 
-sub tag_type { 'clientResponse' }
+=head1 FUNCTIONS
+
+=head2 B<Remedy::CMDB::Template::Response> Overrides
+
+=over 4
+
+=item tag_type
+
+I<cmdbResponse>
+
+=cut
+
+sub tag_type { 'cmdbResponse' }
 
 =back
 
