@@ -2,8 +2,13 @@
 REMEDY_HOME=/afs/ir/users/t/s/tskirvin/work/remedy/libremedy-perl
 REMEDY_CMDB_HOME=/afs/ir/users/t/s/tskirvin/work/remedy/libremedy-cmdb-perl
 
+SUBMIT=cmdb-submit-register
+DEREG_SUBMIT=cmdb-submit-deregister
+REGISTER=cmdb-register
+
 DEBUG=--debug --debug --debug --debug --debug
 
+XML_DEREG=${REMEDY_CMDB_HOME}/sample/sample-dereg.cmdbf.xml
 XML_SUNIA=/afs/ir/service/cmdb/data/in/short.xml
 # XML_SUNIA=/afs/ir/group/networking/www/monitor/test/cmdb/cmdb.xml
 XML_WINDOWS=${REMEDY_CMDB_HOME}/sample/w.xml
@@ -24,11 +29,20 @@ current:
 	@PERLLIB=${PERLLIB} ${REMEDY_HOME}/bin/remedy-dump \
 		"BMC.CORE:BMC_BaseElement"
 
+deregister:
+	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/${DEREG_SUBMIT} < ${XML_DEREG}
+
+deregister-debug:
+	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/${DEREG_SUBMIT} ${DEBUG} < ${XML_DEREG}
+
+deregister-reg:
+	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/${REGISTER} ${DEBUG} < ${XML_DEREG}
+
 real:
-	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/cmdb-submit < ${XML}
+	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/${SUBMIT} < ${XML}
 
 real-debug:
-	PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/cmdb-submit ${DEBUG} < ${XML}
+	PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/${SUBMIT} ${DEBUG} < ${XML}
 
 server:
 	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/cmdb-server
@@ -40,13 +54,13 @@ query:
 	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/cmdb-query < ${XML}
 
 sunia:
-	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/cmdb-submit < ${XML_SUNIA}
+	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/${SUBMIT} < ${XML_SUNIA}
 
 windows:
-	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/cmdb-submit < ${XML_WINDOWS}
+	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/${SUBMIT} < ${XML_WINDOWS}
 
 system-register:
 	PERLLIB=$(PERLLIB) ${REMEDY_CMDB_HOME}/bin/cmdb-remctl < ${XML}
 
 test:
-	PERLLIB=$(PERLLIB) ${REMEDY_CMDB_HOME}/bin/cmdb-submit < ${XML_TEST}
+	PERLLIB=$(PERLLIB) ${REMEDY_CMDB_HOME}/bin/${SUBMIT} < ${XML_TEST}

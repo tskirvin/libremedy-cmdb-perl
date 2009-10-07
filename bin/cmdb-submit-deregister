@@ -1,0 +1,163 @@
+#!/usr/bin/perl
+# Copyright and license are in the documentation below.
+
+=head1 NAME
+
+cmdb-submit-deregister - submit deregistration data straight to the CMDB
+
+=head1 SYNOPSIS
+
+B<cmdb-submit-deregister> < I<XML>
+
+=head1 
+
+cmdb-submit-deregister takes a pice of XML on STDIN, loads it into
+B<Remedy::CMDB::Deregister>, and registers the resulting data structure with the
+database.  It does this directly, without the client-server interface used by
+B<cmdb-server> and B<cmdb-register>.  It is therefore useful for larger runs,
+and/or any situation where less complexity is better.
+
+=cut
+
+##############################################################################
+### Configuration ############################################################
+##############################################################################
+
+## Print debugging information?  Set with '--debug', can be set many times
+our $DEBUG = 0;
+
+##############################################################################
+### Declarations #############################################################
+##############################################################################
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use Pod::Usage;
+use Remedy::CMDB::Deregister;
+use Remedy::CMDB::Deregister::Response;
+use Remedy::CMDB;
+
+$0 =~ s%.*/%%g;     # Lose the annoying path information
+$|++;               # Flush output
+
+##############################################################################
+### main () ##################################################################
+##############################################################################
+
+our $LOGGER   = Remedy::CMDB::Log->get_logger;
+
+## we create the config item first so we can do logging and such
+my $config = eval { Remedy::CMDB::Config->load () };
+exit_error ("could not load CMDB configuration: $@") unless $config;
+
+## this is the only place we're going to use non-XML exit error strings
+my $parser = new Getopt::Long::Parser;
+my $result = $parser->getoptions (
+    'd|debug+'      => \$DEBUG,
+    'man'           => sub { pod2usage (-verbose => 2, -noperldoc => 1) },
+    'h|help'        => sub { pod2usage (-verbose => 1) }) || error_usage ();
+
+$config->log->more_logging ($DEBUG) if $DEBUG;
+
+## read the XML from STDIN
+my $register = eval { Remedy::CMDB::Deregister->read ('xml', 
+    'type' => 'stream', 'source' => \*STDIN) };
+exit_error ("could not read registration source: $@") unless $register;
+
+$LOGGER->debug (sprintf ("parsed deregistration XML: %d items",
+    scalar $register->items || 0));
+
+## Make sure the mdrId is set; we'll match it in a second
+my $mdr_parent = $register->mdrId || exit_error ("no mdrId in source XML");
+$LOGGER->debug ("mdr_parent is $mdr_parent");
+
+## Now make sure the mdrId matches a valid dataset
+my $dataset = $config->mdr_to_dataset ($mdr_parent) 
+    || exit_error ("no dataset mapping for $mdr_parent");
+$LOGGER->debug ("associated dataset is $dataset");
+
+## TODO: look at the kerberos principal, ye mighty, and despair
+$LOGGER->debug ("skipping kerberos principal check for now");
+
+## Finally, we can create our Remedy connection
+$LOGGER->debug ("connecting to CMDB");
+my $cmdb = eval { Remedy::CMDB->connect ('config' => $config, 
+    'debug' => $DEBUG) } || exit_error ("couldn't create CMDB object: $@");
+exit_error ($@) if $@;
+
+## Actually perform the registration.
+my $response = $register->register_all ($cmdb, 'dataset' => $dataset, 
+    'mdr' => $mdr_parent);
+
+## Let the response print its output and exit.
+$response->exit_response;
+
+## We shouldn't have gotten here.
+exit 1;
+
+##############################################################################
+### Subroutines ##############################################################
+##############################################################################
+
+sub exit_error { 
+    my ($error) = @_;
+    $LOGGER->fatal ($error);
+    Remedy::CMDB::Deregister::Response->exit_error ($error)
+}
+
+sub error_usage {
+    my ($error) = @_;
+    $LOGGER->error ($error);
+    pod2usage (-exit_status => 2, -verbose => 1);
+}
+
+##############################################################################
+### Final Documentation ######################################################
+##############################################################################
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-d>, B<--debug>
+
+Increase the debugging level of the run.  Can be added multiple times, each of
+which will add significant additional debug info.
+
+=item B<-h>, B<--help>
+
+Prints out the synopsis information and exits.
+
+=item B<--man>
+
+Prints this manual page and exit.
+
+=back
+
+=head1 REQUIREMENTS
+
+B<Remedy::CMDB>, B<Remedy::CMDB::Deregister>,
+B<Remedy::CMDB::Deregister::Response>
+
+=head1 SEE ALSO
+
+cmdb-server(3), cmdb-register(1)
+
+=head1 HOMEPAGE
+
+TBD.
+
+=head1 AUTHOR
+
+Tim Skirvin <tskirvin@stanford.edu>
+
+=head1 LICENSE
+
+Copyright 2009 Board of Trustees, Leland Stanford Jr. University
+
+This program is free software; you may redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut

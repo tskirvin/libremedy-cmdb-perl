@@ -1,10 +1,10 @@
-package Remedy::CMDB::Register::Response;
+package Remedy::CMDB::Deregister::Response;
 our $VERSION = "1.00.00";
 # Copyright and license are in the documentation below.
 
 =head1 NAME
 
-Remedy::CMDB::Register::Response - XML responses to a registration request
+Remedy::CMDB::Deregister::Response - XML responses to a registration request
 
 =head1 SYNOPSIS
 
@@ -12,7 +12,7 @@ Remedy::CMDB::Register::Response - XML responses to a registration request
 
 =head1 DESCRIPTION
 
-Remedy::CMDB::Register::Response is a simple sub-class of the template
+Remedy::CMDB::Deregister::Response is a simple sub-class of the template
 B<Remedy::CMDB::Template::Response>.  It is used to create high-level responses
 to registration requests.
 
@@ -27,6 +27,7 @@ use warnings;
 
 use Exporter;
 use Remedy::CMDB::Template::Response;
+use Remedy::CMDB::Deregister::ResponseItem;
 
 our @ISA = qw/Remedy::CMDB::Template::Response/;
 our @EXPORT_OK = qw/exit_error exit_response/;
@@ -43,9 +44,6 @@ our @EXPORT_OK = qw/exit_error exit_response/;
 
 =item populate_xml (XML)
 
-Looks for I<instanceResponse>, I<relationshipResponse>, and
-I<deregisterResponse>.
-
 =cut
 
 sub populate_xml {
@@ -57,21 +55,13 @@ sub populate_xml {
     $self->clear_object;
 
     my @items;
-    foreach my $instance ($self->children ('instanceResponse')) {
-        my $obj = Remedy::CMDB::Item::Response->read ('xml',
+    foreach my $instance ($self->children ('deregisterinstanceResponse')) {
+        my $obj = Remedy::CMDB::Deregister::ResponseItem->read ('xml',
                 'source' => $instance, 'type' => 'object');
         return "no object created" unless $obj;
         return $obj unless ref $obj;
         push @items, $obj;
     }
-    foreach my $instance ($self->children ('relationshipResponse')) {
-        my $obj = Remedy::CMDB::Relationship::Response->read ('xml',
-                'source' => $instance, 'type' => 'object');
-        return "no object created" unless $obj;
-        return $obj unless ref $obj;
-        push @items, $obj;
-    }
-    $self->instance (\@items);
 
     return;
 }
@@ -82,7 +72,7 @@ I<registerResponse>
 
 =cut
 
-sub tag_type { 'registerResponse' }
+sub tag_type { 'deregisterResponse' }
 
 =back
 

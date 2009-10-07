@@ -285,7 +285,6 @@ sub process {
     ## TODO: kerberos principal check goes here.
     # $self->config->sources->validate_principal ($mdr_parent, $register->env
     #   ('KRB5CCNAME'));
-    ## TODO: choosing between a query and register service goes here.  
 
     my $response = $query->register_all ($self->cmdb, 
         'dataset' => $dataset, 'mdr' => $mdr_parent);
@@ -360,7 +359,7 @@ Return the current logger object (obtained through B<cmdb ()>) or die.
 sub logger_or_die { 
     my ($self) = @_;
     return unless $self->cmdb;
-    $self->cmdb->log->logger;
+    $self->cmdb->logger_or_die;
 }
 
 =back

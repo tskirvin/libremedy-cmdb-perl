@@ -1,17 +1,17 @@
-package Remedy::CMDB::Register;
+package Remedy::CMDB::Deregister;
 our $VERSION = "0.50.00";
 # Copyright and license are in the documentation below.
 
 =head1 NAME
 
-Remedy::CMDB::Register - CMDB registration service
+Remedy::CMDB::Deregister - CMDB de-registration service
 
 =head1 SYNOPSIS
 
-    use Remedy::CMDB::Register;
+    use Remedy::CMDB::Deregister;
     
     # $cmdb is an existing CMDB object - see Remedy::CMDB
-    my $register = eval { Remedy::CMDB::Register->read ('xml', 
+    my $register = eval { Remedy::CMDB::Deregister->read ('xml', 
         'type' => 'stream', 'source' => \*STDIN) };
     die "could not load registration XML: $@\n" unless $register;
 
@@ -32,21 +32,16 @@ Remedy::CMDB::Register - CMDB registration service
 
 =head1 DESCRIPTION
 
-Remedy::CMDB::Register is the heart of the CMDB registration service.  It
-parses a piece of registration XML into three pieces of information: a list of
-items to be registered, a list of relationships to be registered, and a parent
-MDR in which all of this work is to be done.  From there, we offer functions to
+Remedy::CMDB::Deregister de-registers CIs from the CMDB.  It parses a piece
+of deregistration XML into three pieces of information: a list of items to be
+deregistered, a list of relationships to be deregistered, and a parent MDR
+in which all of this work is to be done.  From there, we offer functions to
 actually perform the work.
 
-Remedy::CMDB::Register is a sub-class of B<Remedy::CMDB::Struct>, and inherits
+Remedy::CMDB::Deregister is a sub-class of B<Remedy::CMDB::Struct>, and inherits
 many functions from there.
 
 =cut
-
-##############################################################################
-### Configuration ############################################################
-##############################################################################
-# Nothing local.
 
 ##############################################################################
 ### Declarations #############################################################
@@ -56,8 +51,9 @@ use strict;
 use warnings;
 
 use Lingua::EN::Inflect qw/inflect/;
-use Remedy::CMDB::Item::List;
-use Remedy::CMDB::Register::Response;
+use Remedy::CMDB::Deregister::ItemList;
+use Remedy::CMDB::Deregister::RelationshipList;
+use Remedy::CMDB::Deregister::Response;
 use Remedy::CMDB::Relationship::List;
 
 use Remedy::CMDB::Struct qw/init_struct/;
@@ -73,26 +69,26 @@ our @ISA = init_struct (__PACKAGE__);
 
 =over 4
 
-=item itemList (B<Remedy::CMDB::Item::List>)
+=item itemList (B<Remedy::CMDB::Deregister::ItemList>)
 
-A list of items to be registered.
+A list of items to be deregistered.
+
+=item relationshipList (B<Remedy::CMDB::Deregister::RelationshipList>)
+
+A list of relationships to be deregistered.
 
 =item mdrId (I<MDR>)
 
 The data source that this registration information came from.
-
-=item relationshipList (B<Remedy::CMDB::Relationship::List>)
-
-A list of item relationships to be registered.
 
 =back
 
 =cut
 
 sub fields {
-    'itemList'          => 'Remedy::CMDB::Item::List',
-    'mdrId'             => '$',
-    'relationshipList'  => 'Remedy::CMDB::Relationship::List',
+    'itemList'         => 'Remedy::CMDB::Deregister::ItemList',
+    'relationshipList' => 'Remedy::CMDB::Deregister::RelationshipList',
+    'mdrId'            => '$',
 }
 
 ##############################################################################
@@ -115,8 +111,7 @@ class.
 sub clear_object {
     my ($self) = @_;
     $self->mdrId ('');
-    $self->itemList         ();
-    $self->relationshipList ();
+    $self->itemList ();
     return;
 }
 
@@ -136,18 +131,18 @@ sub populate_xml {
     return 'no mdrId' unless $mdr;
     $self->mdrId ($mdr);
 
-    if (my $itemlist = $xml->first_child ('itemList')) {
-        my $obj = Remedy::CMDB::Item::List->read ('xml', 'source' => $itemlist,
-            'type' => 'object');
-        return 'could not parse itemList' unless $obj;
+    if (my $itemlist = $xml->first_child ('itemIdList')) {
+        my $obj = Remedy::CMDB::Deregister::ItemList->read ('xml', 
+            'source' => $itemlist, 'type' => 'object');
+        return 'could not parse itemIdList' unless $obj;
         return $obj unless ref $obj;
         $self->itemList ($obj);
     }
 
-    if (my $relationshiplist = $xml->first_child ('relationshipList')) {
-        my $obj = Remedy::CMDB::Relationship::List->read ('xml', 
-            'source' => $relationshiplist, 'type' => 'object');
-        return 'could not parse relationshipList' unless $obj;
+    if (my $rellist = $xml->first_child ('relationshipIdList')) {
+        my $obj = Remedy::CMDB::Deregister::RelationshipList->read ('xml', 
+            'source' => $rellist, 'type' => 'object');
+        return 'could not parse relationshipIdList' unless $obj;
         return $obj unless ref $obj;
         $self->relationshipList ($obj);
     }
@@ -157,29 +152,11 @@ sub populate_xml {
 
 =item tag_type ()
 
-=cut
-
-sub tag_type { 'registerRequest' }
-
-=item text ()
+I<deregisterRequest>
 
 =cut
 
-sub text {
-    my ($self) = @_;
-    my @return;
-
-    push @return, '', "Items";
-    foreach my $item (@{$self->itemList->list}) { 
-        foreach ($item->text)     { push @return, "  $_" }
-    }
-    push @return, '', "Relationships";
-    foreach my $relation (@{$self->relationshipList}) { 
-        foreach ($relation->text) { push @return, "  $_" }
-    }
-
-    wantarray ? @return : join ("\n", @return, '');
-}
+sub tag_type { 'deregisterRequest' }
 
 =back
 
@@ -196,8 +173,8 @@ sub text {
 
 =item items ()
 
-Returns an array of B<Remedy::CMDB::Item> objects, pulled from from B<itemList
-()>.
+Returns an array of B<Remedy::CMDB::Deregister::Item> objects, pulled from
+B<itemList ()>.
 
 =cut
 
@@ -209,10 +186,24 @@ sub items {
     return @$list;
 }
 
+=item relationships ()
+
+Returns an array of B<Remedy::CMDB::Deregister::Relationship> objects, pulled
+from B<relationshipList ()>.
+
+=cut
+
+sub relationships {
+    my ($self) = @_;
+    return unless my $itemlist = $self->relationshipList;
+    return unless my $list = $itemlist->list;
+    return unless ref $list && scalar @$list;
+    return @$list;
+}
+
 =item register_all (CMDB, ARGHASH)
 
-Registers all of the data stored in this object, in the following order: items,
-relationships.
+Deregisters all of the items stored in this object.
 
 I<CMDB> is a connected B<Remedy::CMDB> object.  I<ARGHASH> is a hash of
 arguments, which
@@ -229,8 +220,8 @@ Data source of the registered information.  Required.
 
 =back
 
-Returns a B<Remedy::CMDB::Register::Response> object populated with information
-about what happened during this registration.
+Returns a B<Remedy::CMDB::Deregister::Response> object populated with
+information about what happened during this registration.
 
 =cut
 
@@ -241,33 +232,18 @@ sub register_all {
     my $dataset = $args{'dataset'};
     my $mdr     = $args{'mdr'};
 
-    my $response = Remedy::CMDB::Register::Response->new ();
+    my $response = Remedy::CMDB::Deregister::Response->new ();
 
-    $logger->debug ('registering all items');
+    $logger->debug ('de-registering all items');
     $self->do_register_all ($cmdb, [$self->items], 'type' => 'item', 
         'response' => $response, 'dataset' => $dataset, 'mdr' => $mdr);
 
-    $logger->debug ('registering all relationships');   
-    $self->do_register_all ($cmdb, [$self->relationships], 
-        'type' => 'relationship', 'response' => $response, 
-        'dataset' => $dataset, 'mdr' => $mdr);
+    $logger->debug ('de-registering all relationships');
+    $self->do_register_all ($cmdb, [$self->relationships], 'type' =>
+        'relationship', 'response' => $response, 'dataset' => $dataset, 
+        'mdr' => $mdr);
 
     return $response;
-}
-
-=item relationships ()
-
-Like B<items ()>, but returns an array of B<Remedy::CMDB::Relationship> objects
-pulled from B<relationshipList ()>.
-
-=cut
-
-sub relationships {
-    my ($self) = @_;
-    return unless my $relationshiplist = $self->relationshipList;
-    return unless my $list = $relationshiplist->list;
-    return unless ref $list && scalar @$list;
-    return @$list;
 }
 
 =back
@@ -321,15 +297,15 @@ sub do_register_all {
 
 =head1 REQUIREMENTS
 
-B<Lingua::EN::Inflect>, 
-B<Remedy::CMDB::Item::List>, B<Remedy::CMDB::Register::Response>,
-B<Remedy::CMDB::Relationship::List>, B<Remedy::CMDB::Struct>
+B<Lingua::EN::Inflect>, B<Remedy::CMDB::Deregister::ItemList>,
+B<Remedy::CMDB::Deregister::RelationshipList>,
+B<Remedy::CMDB::Deregister::Response>, B<Remedy::CMDB::Struct>
 
 =head1 SEE ALSO
 
 Remedy::CMDB(8), Remedy::CMDB::Query(8)
 
-cmdb-server(3), cmdb-submit-register(1)
+cmdb-server(3), cmdb-submit-deregister(1)
 
 =head1 HOMEPAGE
 

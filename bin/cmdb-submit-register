@@ -3,15 +3,15 @@
 
 =head1 NAME
 
-cmdb-submit - submit data straight to the CMDB
+cmdb-submit-register - submit registration data straight to the CMDB
 
 =head1 SYNOPSIS
 
-B<cmdb-submit> < I<XML>
+B<cmdb-submit-register> < I<XML>
 
 =head1 
 
-cmdb-submit takes a pice of XML on STDIN, loads it into
+cmdb-submit-register takes a pice of XML on STDIN, loads it into
 B<Remedy::CMDB::Register>, and registers the resulting data structure with the
 database.  It does this directly, without the client-server interface used by
 B<cmdb-server> and B<cmdb-register>.  It is therefore useful for larger runs,

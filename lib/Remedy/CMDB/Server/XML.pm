@@ -1,10 +1,10 @@
 package Remedy::CMDB::Server::XML;
-our $VERSION = "0.01.01";
+our $VERSION = "0.50.00";
 # Copyright and license are in the documentation below.
 
 =head1 NAME
 
-Remedy::CMDB::Server::XML -
+Remedy::CMDB::Server::XML - parse client XML and run commands based on it
 
 =head1 SYNOPSIS
 
@@ -46,6 +46,10 @@ many functions from there.
 
 =over 2
 
+=item deregisterRequest
+
+Maps to B<Remedy::CMDB::Deregister>
+
 =item queryRequest
 
 Maps to B<Remedy::CMDB::Query>
@@ -59,8 +63,9 @@ Maps to B<Remedy::CMDB::Register>
 =cut
 
 our %TYPES = (
-    'queryRequest'     => 'Remedy::CMDB::Query',
-    'registerRequest'  => 'Remedy::CMDB::Register',
+    'queryRequest'       => 'Remedy::CMDB::Query',
+    'registerRequest'    => 'Remedy::CMDB::Register',
+    'deregisterRequest'  => 'Remedy::CMDB::Deregister',
 );
 
 =back
@@ -74,6 +79,7 @@ our %TYPES = (
 use strict;
 use warnings;
 
+use Remedy::CMDB::Deregister;
 use Remedy::CMDB::Query;
 use Remedy::CMDB::Register;
 
@@ -196,6 +202,7 @@ sub tag_type { 'cmdb-client' }
 
 =head1 REQUIREMENTS
 
+B<Remedy::CMDB::Deregister>,
 B<Remedy::CMDB::Query>, B<Remedy::CMDB::Register>, B<Remedy::CMDB::Struct>
 
 =head1 HOMEPAGE
