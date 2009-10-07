@@ -105,6 +105,8 @@ A string explaining the reason for failure or note about the success.
 
 The type of response.  We recognize I<accepted>, I<declined>, and I<error>.
 
+=back
+
 =cut
 
 sub fields {
@@ -113,10 +115,6 @@ sub fields {
     'string'      => '$',
     'type'        => '$',
 }
-
-=back
-
-=cut
 
 ##############################################################################
 ### Subroutines ##############################################################
@@ -277,6 +275,22 @@ sub xml {
 
 =item populate (ARGHASH)
 
+Populate the response.  Parses I<ARGHASH>:
+
+=over 4
+
+=item item I<ITEM>
+
+The item that is being populated; may be an object with the command
+B<source_data ()>, or a string.  Required. 
+
+=item type I<TYPE>
+
+Decides which of type of response to populate the object with.  Must be one of
+'accepted', 'declined', or 'error'.
+
+=back
+
 =cut
 
 sub populate {
@@ -295,11 +309,20 @@ sub populate {
 
 =item populate_accepted (ARGHASH)
 
-=over 2
+Set the type to 'accepted'.  Parses F<ARGHASH>:
+
+=over 4
 
 =item obj I<Remedy::CMDB::Item>
 
-=item string I<STRING>
+The base object that we're populating this from.  We create a
+B<Remedy::CMDB::Item::AlternateInstanceID> based on this object.
+
+=item string I<TEXT>
+
+The string to populate into B<string ()>.
+
+=back
 
 =cut
 
@@ -318,6 +341,16 @@ sub populate_accepted {
 
 =item populate_declined (ARGHASH)
 
+Set the type to 'declined'.  Parses F<ARGHASH>:
+
+=over 4
+
+=item string I<TEXT>
+
+The string to populate into B<string ()>.
+
+=back
+
 =cut
 
 sub populate_declined {
@@ -328,6 +361,8 @@ sub populate_declined {
 }
 
 =item populate_error (ARGHASH)
+
+Same as B<populate_declined ()>.
 
 =cut
 

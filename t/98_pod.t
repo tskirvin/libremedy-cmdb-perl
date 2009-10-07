@@ -8,10 +8,10 @@
 #
 # See LICENSE for licensing terms.
 
-eval 'use Test::Pod 1.00';
+eval 'use Test::Pod';
 if ($@) {
     print "1..1\n";
-    print "ok 1 # skip - Test::Pod 1.00 required for testing POD\n";
+    print "ok 1 # skip - Test::Pod required for testing POD\n";
     exit;
 }
 all_pod_files_ok ();

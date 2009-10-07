@@ -290,6 +290,16 @@ sub create_xml_string {
 ### Internal Subroutines #####################################################
 ##############################################################################
 
+=head2 Internal Subroutines 
+
+=over 4
+
+=item logger_or_die
+
+Return the current logger object (obtained through B<config ()>) or die.
+
+=cut
+
 # eventually, we sohuld keep the logger in the object, but not yet
 sub logger_or_die { 
     my ($self) = @_;
@@ -297,8 +307,9 @@ sub logger_or_die {
     $self->config->log->logger;
 }
 
-## We don't have one right now; perhaps we should add one.
-sub DESTROY { }
+=back
+
+=cut
 
 ##############################################################################
 ### Final Documentation ######################################################

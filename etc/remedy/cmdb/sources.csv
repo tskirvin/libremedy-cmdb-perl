@@ -1,2 +1,4 @@
-# mdr, datasource, principal(s)
-http://puppet.stanford.edu,MDR.PUPPET.IMPORT,
+# mdr, datasource, principle
+http://puppet.stanford.edu,MDR.IMPORT.UNIX,service/cmdb-unixextract@stanford.edu
+http://networking.stanford.edu,MDR.IMPORT.NETWORKING,service/cmdb-networkextract@stanford.edu
+https://windows.stanford.edu/CMDBf,MDR.IMPORT.WINDOWS,service/cmdb-winextract@stanford.edu

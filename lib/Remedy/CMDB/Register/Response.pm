@@ -87,8 +87,6 @@ sub populate_xml {
 
 I<registerResponse>
 
-=back
-
 =cut
 
 sub tag_type { 'registerResponse' }

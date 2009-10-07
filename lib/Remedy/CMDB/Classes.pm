@@ -10,7 +10,7 @@ Remedy::CMDB::Classes - map Remedy CI types and human class names
 
     use Remedy::CMDB::Classes;
 
-    my $classes = Remedy::CMDB::Sources->read ($file);
+    my $classes = Remedy::CMDB::Classes->read ($file);
 
     my $class = $classes->human_to_remedy ($human);
     my $human = $classes->remedy_to_human ($remedy);
@@ -50,6 +50,22 @@ struct 'Remedy::CMDB::Classes::Class' => {
 ##############################################################################
 
 =head1 FUNCTIONS
+
+=head2 B<Class::Struct Accessors>
+
+=over 4
+
+=item human (@)
+
+An array of human-readable names for the class.
+
+=item remedy ($)
+
+The Remedy name for the class.
+
+=back
+
+=head2 Local Functions
 
 =over 4
 
@@ -139,6 +155,10 @@ sub valid_names {
     return () unless scalar @human;
     return @human;
 }
+
+=back
+
+=cut
 
 ##############################################################################
 ### Final Documentation ######################################################

@@ -179,17 +179,93 @@ per-function.
 
 =over 4
 
+=item classes ($)
+
+=item classes_file ($)
+
 =item config ($)
 
 =item file ($)
 
 =item log (B<Remedy::CMDB::Log>)
 
+=item logfile ($)
+
+=item loglevel ($)
+
+=item loglevel_file ($)
+
+=item remedy_config ($)
+
+=item socket_file ($)
+
+=item sources ($)
+
+=item sources_file ($)
+
 =back
 
 =head2 Additional Functions
 
 =over 4
+
+=item class_human_to_remedy (HUMAN)
+
+Convert a human-readable class name I<HUMAN> to its remedy counterpart.  Uses
+B<Remedy::CMDB::Classes->human_to_remedy ()>.
+
+=cut
+
+sub class_human_to_remedy {
+    my ($self, $class) = @_;
+    my $logger = $self->logger_or_die;
+    my $human = $self->classes->human_to_remedy ($class);
+    if ($human) { 
+        $logger->debug ("class '$class' => '$human'");
+        return $human;
+    } else {
+        $logger->debug ("no class for '$class'");
+        return;
+    }
+}
+
+=item classes_read (FILE)
+
+Create a B<Remedy::CMDB::Classes> object by reading the file I<FILE>; save the
+object into B<classes ()>, and the filename into B<classes_file ()>.
+
+=cut
+
+sub classes_read {
+    my ($self, $file) = @_;
+    my $logger = $self->log->logger;
+
+    $logger->debug ("loading classes from $file");
+    my $sources = eval { Remedy::CMDB::Classes->read ($file) }
+        or $logger->logdie ("couldn't read classes file: $@");
+
+    $self->classes ($sources);
+    $self->classes_file ($file);
+
+    return $sources;
+}
+
+=item debug ()
+
+Return a string with all valid keys and values listed.
+
+=cut
+
+sub debug {
+    my ($self) = @_;
+    my @return;
+    foreach my $key (keys %FUNCTIONS) { 
+        my $value = $self->$key;
+        push @return, sprintf ("%s: %s", $key, defined $value ? $value 
+                                                              : '*undef*');
+    }
+    wantarray ? @return : join ("\n", @return, '');
+}
 
 =item load ([FILE])
 
@@ -225,6 +301,38 @@ sub load {
     return $self;
 }
 
+=item log_or_die ()
+
+Return the B<log ()> item immediately, or die if we can't get it.
+
+=item logger_or_die ()
+
+Return the B<logger ()> object frim B<log ()>, or die.
+
+=cut
+
+sub log_or_die    { shift->_or_die ('log', "no log", @_) }
+sub logger_or_die { shift->log_or_die (@_)->logger }
+
+=item mdr_to_dataset (MDR)
+
+Convert a human-provided MDR I<MDR> to its remedy dataset counterpart.  Uses
+B<Remedy::CMDB::Sources->datasource ()>.
+
+=cut
+
+sub mdr_to_dataset {
+    my ($self, $mdr) = @_;
+    return $self->sources->datasource ($mdr);
+}
+
+=item sources_read (FILE)
+
+Create a B<Remedy::CMDB::Sources> object by reading the file I<FILE>; save the
+object into B<sources ()>, and the filename into B<sources_file ()>.
+
+=cut
+
 sub sources_read {
     my ($self, $file) = @_;
     my $logger = $self->log->logger;
@@ -239,61 +347,6 @@ sub sources_read {
     return $sources;
 }
 
-sub classes_read {
-    my ($self, $file) = @_;
-    my $logger = $self->log->logger;
-
-    $logger->debug ("loading classes from $file");
-    my $sources = eval { Remedy::CMDB::Classes->read ($file) }
-        or $logger->logdie ("couldn't read classes file: $@");
-
-    $self->classes ($sources);
-    $self->classes_file ($file);
-
-    return $sources;
-}
-
-sub mdr_to_dataset {
-    my ($self, $mdr) = @_;
-    return $self->sources->datasource ($mdr);
-}
-
-=item class_human_to_remedy (HUMAN)
-
-=cut
-
-sub class_human_to_remedy {
-    my ($self, $class) = @_;
-    my $logger = $self->logger_or_die;
-    my $human = $self->classes->human_to_remedy ($class);
-    if ($human) { 
-        $logger->debug ("class '$class' => '$human'");
-        return $human;
-    } else {
-        $logger->debug ("no class for '$class'");
-        return;
-    }
-}
-
-=item debug ()
-
-Return a string with all valid keys and values listed.
-
-=cut
-
-sub debug {
-    my ($self) = @_;
-    my @return;
-    foreach my $key (keys %FUNCTIONS) { 
-        my $value = $self->$key;
-        push @return, sprintf ("%s: %s", $key, defined $value ? $value 
-                                                              : '*undef*');
-    }
-    wantarray ? @return : join ("\n", @return, '');
-}
-
-sub log_or_die    { shift->_or_die ('log', "no log", @_) }
-sub logger_or_die { shift->log_or_die (@_)->logger }
 
 =back
 

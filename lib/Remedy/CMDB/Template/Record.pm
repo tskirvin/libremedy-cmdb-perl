@@ -81,6 +81,8 @@ Stores the 'class' of the data.
 
 Contains a set of key/value pairs containing metadata about the object.  
 
+=back
+
 =cut
 
 sub fields {

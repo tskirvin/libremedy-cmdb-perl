@@ -346,12 +346,26 @@ sub response { shift; Remedy::CMDB::Server::Response->new (@_) }
 ### Internal Subroutines #####################################################
 ##############################################################################
 
-## gotta move this away someday...
+=head2 Internal Subroutines 
+
+=over 4
+
+=item logger_or_die ()
+
+Return the current logger object (obtained through B<cmdb ()>) or die.
+
+=cut
+
+# eventually, we sohuld keep the logger in the object, but not yet
 sub logger_or_die { 
     my ($self) = @_;
     return unless $self->cmdb;
-    $self->cmdb->logger_or_die;
+    $self->cmdb->log->logger;
 }
+
+=back
+
+=cut
 
 ##############################################################################
 ### Final Documentation ######################################################

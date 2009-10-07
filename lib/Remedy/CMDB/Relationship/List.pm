@@ -39,7 +39,7 @@ our @ISA = qw/Remedy::CMDB::Template::List/;
 
 =over 4
 
-=relationship list_class
+=item list_class
 
 I<Remedy::CMDB::Relationship>
 
@@ -47,7 +47,7 @@ I<Remedy::CMDB::Relationship>
 
 sub list_class { 'Remedy::CMDB::Relationship' }
 
-=relationship tag_type ()
+=item tag_type ()
 
 I<relationshipList>
 

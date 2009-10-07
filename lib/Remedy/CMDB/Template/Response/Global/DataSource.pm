@@ -48,10 +48,6 @@ The text of the error message.
 
 sub fields { 'text'  => '$' }
 
-=back
-
-=cut
-
 ##############################################################################
 ### Remedy::CMDB::Struct Overrides ###########################################
 ##############################################################################
@@ -62,6 +58,8 @@ These functions are documented in more detail in the B<Remedy::CMDB::Struct>
 class.
 
 =over 4
+
+=item fields ()
 
 =item tag_type ()
 

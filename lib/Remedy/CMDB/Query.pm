@@ -44,18 +44,15 @@ our @ISA = init_struct (__PACKAGE__);
 
 =head2 B<Class::Struct Accessors>
 
+Currently empty.
+
 =over 4
 
 =back
 
 =cut
 
-sub fields {
-}
-
-=back
-
-=cut
+sub fields { }
 
 ##############################################################################
 ### Remedy::CMDB::Struct Overrides ###########################################

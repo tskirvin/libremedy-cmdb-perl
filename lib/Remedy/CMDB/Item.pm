@@ -1,5 +1,6 @@
 package Remedy::CMDB::Item;
 our $VERSION = "0.50";
+# Copyright and license are in the documentation below.
 
 =head1 NAME
 
@@ -21,11 +22,6 @@ many functions from there.
 =cut
 
 ##############################################################################
-### Configuration ############################################################
-##############################################################################
-# Nothing local.
-
-##############################################################################
 ### Declarations #############################################################
 ##############################################################################
 
@@ -33,7 +29,6 @@ use strict;
 use warnings;
 
 use Remedy::CMDB::Item::InstanceID;
-use Remedy::CMDB::Item::DataSource;
 use Remedy::CMDB::Item::Record;
 use Remedy::CMDB::Item::Response;
 
@@ -458,7 +453,6 @@ B<::Relationship> and B<::Deregister>.
 
 =head1 REQUIREMENTS
 
-B<Remedy::CMDB::Item::DataSource>,
 B<Remedy::CMDB::Item::InstanceID>,
 B<Remedy::CMDB::Item::Record>,
 B<Remedy::CMDB::Item::Response>,

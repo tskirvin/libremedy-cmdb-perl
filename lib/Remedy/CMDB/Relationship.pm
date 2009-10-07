@@ -27,7 +27,6 @@ inherits many functions from there.
 use strict;
 use warnings;
 
-use Remedy::CMDB::Relationship::DataSource;
 use Remedy::CMDB::Relationship::InstanceId;
 use Remedy::CMDB::Relationship::Record;
 use Remedy::CMDB::Relationship::Response;
@@ -74,10 +73,6 @@ sub fields {
     'source'     => 'Remedy::CMDB::Relationship::Source',
     'target'     => 'Remedy::CMDB::Relationship::Target',
 }
-
-=back
-
-=cut
 
 ##############################################################################
 ### Remedy::CMDB::Struct Overrides ###########################################
@@ -510,7 +505,6 @@ sub target_mdrId    { shift->target->mdrId }
 
 =head1 REQUIREMENTS
 
-B<Remedy::CMDB::Relationship::DataSource>,
 B<Remedy::CMDB::Relationship::InstanceId>,
 B<Remedy::CMDB::Relationship::Record>,
 B<Remedy::CMDB::Relationship::Response>,

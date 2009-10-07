@@ -52,6 +52,42 @@ struct 'Remedy::CMDB::Sources::Source' => {
 
 =head1 FUNCTIONS
 
+=head2 B<Class::Struct Accessors>
+
+=over 4
+
+=item mdr (%)
+
+A hash, where the keys are the MDR names and the values are a sub-object
+(see below).
+
+=item src (%)
+
+A hash, where the keys are the data sources and the values are a sub-object
+(see below).
+
+=back
+
+Each of the sub-items is also a B<Class::Struct> object, with the folo
+
+=over 4
+
+=item mdr ($)
+
+The public MDR name.
+
+=item datasource ($)
+
+The datasource name provided to Remedy.
+
+=item principal (@)
+
+The kerberos principals allowed to write to this MDR.
+
+=back
+
+=head2 Local Functions
+
 =over 4
 
 =item datasource (MDR)
@@ -144,6 +180,10 @@ sub validate_principal {
     foreach (@valid) { return $principal if $principal eq $_ }
     return;
 }
+
+=back
+
+=cut
 
 ##############################################################################
 ### Final Documentation ######################################################

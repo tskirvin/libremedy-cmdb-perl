@@ -100,10 +100,6 @@ sub fields {
     'relationshipList'  => 'Remedy::CMDB::Relationship::List',
 }
 
-=back
-
-=cut
-
 ##############################################################################
 ### Remedy::CMDB::Struct Overrides ###########################################
 ##############################################################################
@@ -319,11 +315,18 @@ sub relationships {
 ### Internal Subroutines #####################################################
 ##############################################################################
 
-### do_register_all (CMDB, ITEM_AREF, ARGHASH)
-# Does the actual work of running register () against all items in ITEM_AREF
-# and processing errors accordingly.  This includes a nice error message
-# telling us how many errors there were out of how many attempted
-# registrations.  
+=head2 Internal Subroutines 
+
+=over 4
+
+=item do_register_all (CMDB, ITEM_AREF, ARGHASH)
+
+Does the actual work of running B<register ()> against all items in ITEM_AREF
+and processing errors accordingly.  This includes a nice error message telling
+us how many errors there were out of how many attempted registrations (which is
+why we're using B<Lingua::EN::Inflect>>.
+
+=cut
 
 sub do_register_all {
     my ($self, $cmdb, $item_aref, %args) = @_;
@@ -344,6 +347,10 @@ sub do_register_all {
         inflect ("NUM($error_count) registration PL_N(error)"),
         inflect ("NUM($count) PL_N($args{'type'})")));
 }
+
+=back
+
+=cut
 
 ##############################################################################
 ### Final Documentation ######################################################
