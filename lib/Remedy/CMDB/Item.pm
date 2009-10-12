@@ -209,11 +209,10 @@ sub find {
     }
 
     my $string = "$instanceid in $translate_class";
-    $logger->debug ("searching for $string in $class");
+    $logger->debug ("searching for $string");
     my @items = $cmdb->read ($translate_class, {'InstanceId' => $instanceid});
     if (scalar @items == 0) {
-        $logger->fatal ("no matches for $string");
-        $logger->logdie ("found in translation table, but no matching entry\n");
+        $logger->logdie ("found in translation table, but no matching entry in $class\n");
     } 
 
     return wantarray ? @items : $items[0];
