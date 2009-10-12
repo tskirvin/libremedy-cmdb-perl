@@ -1,9 +1,10 @@
 bin/cmdb-clear
-bin/cmdb-query
 bin/cmdb-register
 bin/cmdb-remctl
 bin/cmdb-server
-bin/cmdb-submit
+bin/cmdb-submit-deregister
+bin/cmdb-submit-query
+bin/cmdb-submit-register
 etc/init.d/cmdb
 etc/remctl/conf.d/cmdb
 etc/remedy/cmdb/classes.csv
@@ -13,6 +14,13 @@ lib/Remedy/CMDB.pm
 lib/Remedy/CMDB/Classes.pm
 lib/Remedy/CMDB/Client.pm
 lib/Remedy/CMDB/Config.pm
+lib/Remedy/CMDB/Deregister.pm
+lib/Remedy/CMDB/Deregister/Item.pm
+lib/Remedy/CMDB/Deregister/ItemList.pm
+lib/Remedy/CMDB/Deregister/Relationship.pm
+lib/Remedy/CMDB/Deregister/RelationshipList.pm
+lib/Remedy/CMDB/Deregister/Response.pm
+lib/Remedy/CMDB/Deregister/ResponseItem.pm
 lib/Remedy/CMDB/Item.pm
 lib/Remedy/CMDB/Item/AlternateInstanceID.pm
 lib/Remedy/CMDB/Item/InstanceID.pm
@@ -50,6 +58,8 @@ Makefile.PL
 MANIFEST			This list of files
 MANIFEST.SKIP
 README
+sample/sample-dereg.cmdbf.xml
 sample/sample-reg.cmdbf.xml
+t/01_modules.t
 t/98_pod.t
 t/99_pod_coverage.t

@@ -236,8 +236,8 @@ sub find {
     $logger->debug ("searching for $string");
     my @items = $cmdb->read ($translate_class, {'InstanceId' => $instanceid});
     if (scalar @items == 0) {
-        $logger->debug ("no matches for $string");
-        return;
+        $logger->fatal ("no matches for $string");
+        $logger->logdie ("found in translation table, but no matching entry\n");
     }  
     
     return wantarray ? @items : \@items;
@@ -312,9 +312,11 @@ sub register {
     my $mdr_parent = $args{'mdr_parent'} or return 'no parent mdr offered';
 
     ## Make sure we have all the local object info we'll need to proceed.
-    my $source = $self->source or return 'no relationship source';
-    my $target = $self->target or return 'no relationship target';
-    my $record = $self->record or return 'no relationship record';
+    my $localId = $self->localId or return 'no localId';
+    my $mdrId  = $self->mdrId   or return 'no mdrId';
+    my $source = $self->source  or return 'no relationship source';
+    my $target = $self->target  or return 'no relationship target';
+    my $record = $self->record  or return 'no relationship record';
     
     my $data     = $record->data     or return 'no record data';
     my $datatype = $record->datatype or return 'no record datatype';
@@ -359,6 +361,9 @@ sub register {
         $obj->set ('Destination.DatasetId'  => $dataset);
         $obj->set ('Destination.InstanceId' => $tgt_item->get ('InstanceId'));
         $obj->set ('DatasetId'              => $dataset);
+        ## append the timestamp to new objects.
+        my $externalId = join ('.', time, join ('@', $localId, $mdrId));
+        $obj->set ('InstanceId' => $externalId);
         push @changes, "new relationship";
     } elsif (scalar @obj > 1) { 
         return 'too many relationships found';

@@ -3,7 +3,7 @@
 
 =head1 NAME
 
-cmdb-query -- stub for querying the Remedy CMDB
+cmdb-submit-query -- stub for querying the Remedy CMDB
 
 =head1 SYNOPSIS
 
@@ -11,7 +11,7 @@ B<remctl cmdb cmdb query> cmdb query < I<XML>
 
 =head1 DESCRIPTION
 
-B<cmdb-query> takes an XML-formatted query, parses the request to confirm
+B<cmdb-submit-query> takes an XML-formatted query, parses the request to confirm
 that the XML is valid, and passes it off to the local remedy query service
 (along with a set of environment variables); it then returns an XML-formatted
 response.  It is meant for use with B<remctl>, so that clients can issue

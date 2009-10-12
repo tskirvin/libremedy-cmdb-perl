@@ -1,8 +1,8 @@
 libremedy-cmdb-perl (2) UNRELEASED; urgency=low
 
-  * Code base 0.50
+  * Code base 0.51.02 (yes, we need to record more than this)
 
- -- Tim Skirvin <tskirvin@stanford.edu>  Fri, 02 Oct 2009 14:01:48 -0700
+ -- Tim Skirvin <tskirvin@stanford.edu>  Mon, 12 Oct 2009 16:25:19 -0700
 
 libremedy-cmdb-perl (1) intrepid UNRELEASED; urgency=low
 

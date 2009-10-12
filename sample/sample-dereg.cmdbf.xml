@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deregisterRequest>
+  <mdrId>http://puppet.stanford.edu</mdrId>
+  <itemIdList>
+    <instanceId>
+      <mdrId>http://puppet.stanford.edu</mdrId>
+      <localId>6zymf51</localId>
+    </instanceId>
+    <instanceId>
+      <mdrId>http://puppet.stanford.edu</mdrId>
+      <localId>171.67.16.11</localId>
+    </instanceId>
+    <instanceId>
+      <mdrId>http://puppet.stanford.edu</mdrId>
+      <localId>171.67.16.43</localId>
+    </instanceId>
+    <instanceId>
+      <mdrId>http://puppet.stanford.edu</mdrId>
+      <localId>000f1f698e00</localId>
+    </instanceId>
+    <instanceId>
+      <mdrId>http://puppet.stanford.edu</mdrId>
+      <localId>000f1f698e01</localId>
+    </instanceId>
+    <instanceId>
+      <mdrId>http://puppet.stanford.edu</mdrId>
+      <localId>os-pchg-web1.stanford.edu</localId>
+    </instanceId>
+  </itemIdList>
+  <relationshipIdList>
+    <instanceId>
+      <mdrId>http://puppet.stanford.edu</mdrId>
+      <localId>6zymf51=>171.67.16.11</localId>
+    </instanceId>
+    <instanceId>
+      <mdrId>http://puppet.stanford.edu</mdrId>
+      <localId>6zymf51=>171.67.16.43</localId>
+    </instanceId>
+    <instanceId>
+      <mdrId>http://puppet.stanford.edu</mdrId>
+      <localId>6zymf51=>000f1f698e00</localId>
+    </instanceId>
+    <instanceId>
+      <mdrId>http://puppet.stanford.edu</mdrId>
+      <localId>6zymf51=>000f1f698e01</localId>
+    </instanceId>
+    <instanceId>
+      <mdrId>http://puppet.stanford.edu</mdrId>
+      <localId>pchg-web1.stanford.edu=>Debian 5.0.1</localId>
+    </instanceId>
+  </relationshipIdList>
+</deregisterRequest>
+

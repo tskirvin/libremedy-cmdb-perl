@@ -8,6 +8,13 @@ BEGIN {
     our @MODULES = qw/ 
         Remedy::Form::CMDB_Clear
         Remedy::CMDB
+        Remedy::CMDB::Deregister
+        Remedy::CMDB::Deregister::Item
+        Remedy::CMDB::Deregister::ItemList
+        Remedy::CMDB::Deregister::Relationship
+        Remedy::CMDB::Deregister::RelationshipList
+        Remedy::CMDB::Deregister::Response
+        Remedy::CMDB::Deregister::ResponseItem
         Remedy::CMDB::Log
         Remedy::CMDB::Relationship
         Remedy::CMDB::Register
