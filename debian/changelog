@@ -1,8 +1,17 @@
+libremedy-cmdb-perl (0.51.03) UNRELEASED; urgency=low
+
+  * Switching to the internal versioning for now.
+  * Item.pm handles '0' as a data value properly
+  * Item.pm exits on registration if the field had leading/trailing
+    whitespace
+
+ -- Tim Skirvin <tskirvin@stanford.edu>  Tue, 13 Oct 2009 16:18:34 -0700
+
 libremedy-cmdb-perl (2) UNRELEASED; urgency=low
 
   * Code base 0.51.02 (yes, we need to record more than this)
 
- -- Tim Skirvin <tskirvin@stanford.edu>  Mon, 12 Oct 2009 16:25:19 -0700
+ -- Tim Skirvin <tskirvin@stanford.edu>  Tue, 13 Oct 2009 16:18:34 -0700
 
 libremedy-cmdb-perl (1) intrepid UNRELEASED; urgency=low
 

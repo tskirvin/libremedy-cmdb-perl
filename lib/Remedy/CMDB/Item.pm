@@ -1,5 +1,5 @@
 package Remedy::CMDB::Item;
-our $VERSION = "0.50";
+our $VERSION = "0.51";
 # Copyright and license are in the documentation below.
 
 =head1 NAME
@@ -344,7 +344,9 @@ sub register {
             return "tried to write to $key";
         }
         return "$datatype: '$key' is invalid" unless $obj->validate ($key);
-        my $value = $$data{$key} || '';
+        my $value = defined $$data{$key} ? $$data{$key} : '';
+        return "$datatype: '$key' has leading whitespace" if $value =~ /^\s+/;
+        return "$datatype: '$key' has trailing whitespace" if $value =~ /\s+$/;
         my $orig  = $obj->get ($key);
         if (defined $orig && $value eq $orig) {
             $logger->all (sprintf ("%20.20s: no change", $key));
