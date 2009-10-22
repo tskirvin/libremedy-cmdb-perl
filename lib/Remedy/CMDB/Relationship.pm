@@ -362,7 +362,7 @@ sub register {
         $obj->set ('DatasetId'              => $dataset);
         ## append the timestamp to new objects.
         my $externalId = join ('.', time, join ('@', $localId, $mdrId));
-        $obj->set ('InstanceId' => $externalId);
+        $obj->set ('ExternalInstanceId' => $externalId);
         push @changes, "new relationship";
     } elsif (scalar @obj > 1) { 
         return 'too many relationships found';
@@ -371,13 +371,13 @@ sub register {
         $obj = $obj[0];
     }   
     
-        
     ## Parse the local data hash and figure out what changes are necessary
     foreach my $key (sort keys %{$data}) {
         if ($key eq 'DatasetId') {
             $logger->debug ("skipping key $key");
             next;
-        } elsif ($key eq 'InstanceId' || $key eq 'MarkAsDeleted') {
+        } elsif ($key eq 'InstanceId' || $key eq 'MarkAsDeleted' 
+                                      || $key eq 'ExternalInstanceId') {
             $logger->debug ("key $key should not be written to from here");
             return "tried to write to $key"; 
         }   

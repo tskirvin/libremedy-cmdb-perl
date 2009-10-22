@@ -245,6 +245,11 @@ functions handle the rest.
 
 =item find_translation (STUB [, CLASS])
 
+Find a CI based on a lookup through the translation table.  I<STUB> is a
+B<Remedy::Form> object with I<Internal InstanceId> and I<DatasetId> fields.  
+Searches the I<CLASS> table (defaults to I<translate>) for entries; returns an
+array of matching B<Remedy::Form> objects.
+
 =cut
 
 sub find_translation {
@@ -273,9 +278,29 @@ sub find_translation {
     return wantarray ? @items : \@items;
 }
 
-=item register_translation (FIELDS)
+=item register_translation (FIELDHASH)
 
-Registers the current 
+Registers the information stored in the hash I<FIELDHASH> into a translation
+table entry.  Creates a stub item based on the offered information, and passes
+it to B<find_translation ()>.  If one item is offered, then we will update its
+I<Last Seen> field with the current time and re-save.
+
+Items from I<FIELDHASH>:
+
+=over 4
+
+=item instanceId I<ID>
+
+The internal instance ID of the object.
+
+=item datasetId I<ID>
+
+The dataset ID of the object.
+
+=back
+
+Returns an error message if there's a problem (most obviously, if no matching 
+entry is found, or if more than one entry is found), or undef on success.
 
 =cut
 

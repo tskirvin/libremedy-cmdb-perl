@@ -323,7 +323,8 @@ sub register {
         $obj->set ('DatasetId'  => $dataset);
         ## append the timestamp to new objects.
         my $externalId = join ('.', time, join ('@', $name, $mdrId));
-        $obj->set ('InstanceId' => $externalId);
+        $logger->debug ("setting external instanceid to $externalId\n");
+        $obj->set ('ExternalInstanceId' => $externalId);
         push @changes, "new object";
 
     } elsif (scalar @obj > 1) { 
@@ -339,7 +340,8 @@ sub register {
         if ($key eq 'DatasetId') {
             $logger->debug ("skipping key $key");
             next;
-        } elsif ($key eq 'InstanceId' || $key eq 'MarkAsDeleted') {
+        } elsif ($key eq 'InstanceId' || $key eq 'MarkAsDeleted' 
+                                      || $key eq 'ExternalInstanceId') {
             $logger->debug ("key $key should not be written to from here");
             return "tried to write to $key";
         }

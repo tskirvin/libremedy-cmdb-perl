@@ -39,7 +39,7 @@ case "$1" in
 	    ;;
     stop)
 	    echo -n "Stopping ${NAME_HUMAN}: "
-	    pkill -f $PROGRAM_RUN
+	    pkill -9 -f $PROGRAM_RUN
 	    RETVAL=$?
 	    if [ $RETVAL -eq 0 ]; then
 		    echo_success
