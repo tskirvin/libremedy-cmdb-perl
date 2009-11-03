@@ -1,3 +1,16 @@
+libremedy-cmdb-perl (0.52.01) UNRELEASED; urgency=low
+
+  * Added 'cmdb-stale' script.
+
+ -- Tim Skirvin <tskirvin@stanford.edu>  Mon, 02 Nov 2009 16:14:34 -0800
+
+libremedy-cmdb-perl (0.52.00) UNRELEASED; urgency=low
+
+  * Using 'ExternalInstanceId' instead of 'InstanceId' in BaseElement/
+    BaseRelationship
+
+ -- Tim Skirvin <tskirvin@stanford.edu>  Thu, 22 Oct 2009 16:18:34 -0700
+
 libremedy-cmdb-perl (0.51.03) UNRELEASED; urgency=low
 
   * Switching to the internal versioning for now.

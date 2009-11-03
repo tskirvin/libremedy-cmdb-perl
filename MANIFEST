@@ -2,6 +2,7 @@ bin/cmdb-clear
 bin/cmdb-register
 bin/cmdb-remctl
 bin/cmdb-server
+bin/cmdb-stale
 bin/cmdb-submit-deregister
 bin/cmdb-submit-query
 bin/cmdb-submit-register

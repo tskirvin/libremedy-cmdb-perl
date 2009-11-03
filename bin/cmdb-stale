@@ -1,0 +1,227 @@
+#!/usr/bin/perl
+# Copyright and license are in the documentation below.
+
+=head1 NAME
+
+cmdb-stale - list stale CIs from the translation table
+
+=head1 SYNOPSIS
+
+B<cmdb-stale> I<MDR>
+
+B<cmdb-stale> I<MDR> --hours I<HOURS>
+
+B<cmdb-stale> I<MDR> --days I<DAYS>
+
+=head1 
+
+cmbb-stable lists CIs (entries) in the translation table that are "stale" -
+that is, have not been touched in a certain number of hours.  I<MDR> is the
+dataset that we will search.  
+
+By default, a CI is considered stale if it hasn't been updated in 168 hours (1
+week).  This can be adjusted using command-line flags.
+
+=cut
+
+##############################################################################
+### Configuration ############################################################
+##############################################################################
+
+## Print debugging information?  Set with '--debug', can be set many times
+our $DEBUG = 0;
+
+## Which table are we reading from?
+our $TABLE = 'translate';
+
+## How many hours old are we defaulting to?
+our $HOURS = 7 * 24;
+
+## How are we sorting the data?
+our $SORT = 'default';
+our %SORT_TYPE = (
+    'class'   => sub { $a->get ('ClassId')    cmp $b->get ('ClassId')    },
+    'default' => sub { $a->get ('Request Id') <=> $b->get ('Request Id') },
+    'time'    => sub { $b->get ('Last Seen')  cmp $a->get ('Last Seen')  },
+);
+
+##############################################################################
+### Declarations #############################################################
+##############################################################################
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use Lingua::EN::Inflect qw/inflect/;
+use Pod::Usage;
+use Remedy::CMDB;
+
+$0 =~ s%.*/%%g;     # Lose the annoying path information
+$|++;               # Flush output
+
+##############################################################################
+### main () ##################################################################
+##############################################################################
+
+our $LOGGER   = Remedy::CMDB::Log->get_logger;
+
+## we create the config item first so we can do logging and such
+my $config = eval { Remedy::CMDB::Config->load () };
+exit_error ("could not load CMDB configuration: $@") unless $config;
+
+## this is the only place we're going to use non-XML exit error strings
+my $parser = new Getopt::Long::Parser;
+my $result = $parser->getoptions (
+    'd|debug+'=> \$DEBUG,
+    'days=f'  => sub { $HOURS = $_[1] * 24 },
+    'hours=f' => sub { $HOURS = $_[1] },
+    'sort=s'  => \$SORT,
+    'man'     => sub { pod2usage (-verbose => 2, -noperldoc => 1) },
+    'h|help'  => sub { pod2usage (-verbose => 1) }) || error_usage ();
+
+my ($dataset) = @ARGV;
+error_usage () unless $dataset;
+
+our $SORT_FUNC = $SORT_TYPE{$SORT};
+exit_error ("invalid sort type: '$SORT'") unless $SORT_FUNC;
+
+$config->log->more_logging ($DEBUG) if $DEBUG;
+
+## Create our Remedy connection
+$LOGGER->debug ("connecting to CMDB");
+my $cmdb = eval { Remedy::CMDB->connect ('config' => $config, 
+    'debug' => $DEBUG) } || exit_error ("couldn't create CMDB object: $@");
+exit_error ($@) if $@;
+
+my $too_old = time - $HOURS * 3600;
+my $query = { 'Last Seen' => "-$too_old", 'DatasetId' => $dataset };
+
+my $table = $cmdb->translate_class ($TABLE) 
+    || exit_error ("invalid table: '$TABLE'");
+
+my $remedy = $cmdb->remedy || exit_error ('no remedy connection');
+my @stale = $remedy->read ($table, $query);
+my $count = scalar @stale;
+print inflect ("NUM($count) stale PL_N(entry)"), 
+    " in dataset '$dataset' (", inflect ("NUM($HOURS) PL_N(hour)"), 
+    "), sorted by '$SORT'\n";
+
+foreach my $item (sort $SORT_FUNC @stale) {
+    print "\n", scalar format_stale_report ($item);
+}
+
+exit 0;
+
+##############################################################################
+### Subroutines ##############################################################
+##############################################################################
+
+sub format_stale_report {
+    my ($item) = @_;
+    
+    my $lastseen = $item->get ('Last Seen')           || 'unknown';
+    my $external = $item->get ('External InstanceId') || 'unknown';
+    my $localId  = $item->get ('localId')             || 'unknown';
+    my $mdrId    = $item->get ('mdrId')               || 'unknown';
+    my $internal = $item->get ('Internal InstanceId') || 'unknown';
+    my $dataset  = $item->get ('DatasetId')           || 'unknown';
+    my $classid  = $item->get ('ClassId')             || 'unknown';
+    my $create   = $item->get ('Create Date')         || 'unknown';
+
+    my @return = sprintf ("%-59s  %19s", $localId, $classid);
+    push @return, 
+        sprintf ("  Updated: %23s    Created: %23s", $lastseen, $create);
+    push @return, sprintf ("  IntID: %-30s   MDR: %s", $internal, $mdrId);
+    push @return, "  ExtId: $external";
+
+    return wantarray ? @return : join ("\n", @return, '');
+}
+
+sub exit_error { 
+    my ($error) = @_;
+    $LOGGER->logdie ($error);
+}
+
+sub error_usage {
+    my ($error) = @_;
+    $LOGGER->error ($error);
+    pod2usage (-exit_status => 2, -verbose => 1);
+}
+
+##############################################################################
+### Final Documentation ######################################################
+##############################################################################
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-d>, B<--debug>
+
+Increase the debugging level of the run.  Can be added multiple times, each of
+which will add significant additional debug info.
+
+=item B<--days> I<DAYS>
+
+How many days old do we count as 'stale'?  Defaults to 7 (or 168 hours).
+
+=item B<-h>, B<--help>
+
+Prints out the synopsis information and exits.
+
+=item B<--hours> I<HOURS>
+
+How many hours old do we count as 'stale'?  Defaults to 168 hours.
+
+(Note that if both --hours and --days are offered, we will use the last item on
+the command-line.)
+
+=item B<--man>
+
+Prints this manual page and exit.
+
+=item B<--sort> I<SORT>
+
+Chooses a sorting type.  Possible values:
+
+=over 2
+
+=item class
+
+Sort based on class name.
+
+=item default
+
+Sort based on request ID (field 1).
+
+=item time
+
+Sort based on last update time (reversed).
+
+=back
+
+=back
+
+=head1 REQUIREMENTS
+
+B<Remedy::CMDB>, B<Lingua::EN::Inflect>
+
+=head1 HOMEPAGE
+
+TBD.
+
+=head1 AUTHOR
+
+Tim Skirvin <tskirvin@stanford.edu>
+
+Based on work by Adam Lewenberg <adamhl@stanford.edu>
+
+=head1 LICENSE
+
+Copyright 2009 Board of Trustees, Leland Stanford Jr. University
+
+This program is free software; you may redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut

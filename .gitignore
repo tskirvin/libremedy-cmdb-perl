@@ -5,3 +5,4 @@ Makefile.old
 Remedy-CMDB-*.tar.gz
 blib/*
 .__afs*
+pm_to_blib
