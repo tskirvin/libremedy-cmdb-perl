@@ -1,5 +1,5 @@
 package Remedy::CMDB::Classes;
-our $VERSION = "0.50";
+our $VERSION = "0.51";
 # Copyright and license are in the documentation below.
 
 =head1 NAME
@@ -101,7 +101,7 @@ sub read {
         my ($remedy, @human) = $csv->fields ();
         next unless $remedy;
         map { s/^\s+|\s+$//g } @human;
-        push @human, $remedy;
+        push @human, $remedy, lc $remedy, uc $remedy;
         my $obj = Remedy::CMDB::Classes::Class->new (
             'remedy'    => $remedy,
             'human'     => \@human,
@@ -127,8 +127,8 @@ Converts the human-supplied name I<HUMAN> to the proper Remedy CI name.
 
 sub remedy_to_human {
     my ($self, $remedy) = @_;
-    return unless my $obj = $self->remedy ($remedy);
-    return $obj->human;
+    return unless my $obj = $self->human ($remedy);
+    return $obj->human ($remedy);
 }
 
 =item validate (HUMAN)

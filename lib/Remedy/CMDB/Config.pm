@@ -1,5 +1,5 @@
 package Remedy::CMDB::Config;
-our $VERSION = '0.55';
+our $VERSION = '0.55.01';
 
 =head1 NAME
 
@@ -225,6 +225,26 @@ sub class_human_to_remedy {
         return $human;
     } else {
         $logger->debug ("no class for '$class'");
+        return;
+    }
+}
+
+=item class_remedy_to_human (CLASS)
+
+Does the exact opposite of B<class_human_to_remedy>.  Uses
+B<Remedy::CMDB::Classes::remedy_to_human ()>.
+
+=cut
+
+sub class_remedy_to_human {
+    my ($self, $human) = @_;
+    my $logger = $self->logger_or_die;
+    my $class = $self->classes->remedy_to_human ($human);
+    if ($class) { 
+        $logger->debug ("class '$human' => '$class'");
+        return $class;
+    } else {
+        $logger->debug ("no human class for '$human'");
         return;
     }
 }

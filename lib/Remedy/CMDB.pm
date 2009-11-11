@@ -1,5 +1,5 @@
 package Remedy::CMDB;
-our $VERSION = "0.52.01";
+our $VERSION = "0.52.02";
 # Copyright and license are in the documentation below.
 
 =head1 NAME
@@ -425,14 +425,20 @@ Runs B<read ()> through the B<remedy ()> object.
 
 sub read   { shift->remedy_or_die->read (@_) }
 
-=item translate_class
+=item translate_class (CLASS)
 
 Converts a human-readable class name to the remedy table that it should be
 stored in.  Uses B<class_human_to_remedy> from B<Remedy::CMDB::Config>.
+ 
+=item untranslate_class (TABLE)
+
+Converts a remedy table name to its human-readable class name stored in.  Uses
+B<class_remedy_to_human> from B<Remedy::CMDB::Config>.
 
 =cut
 
-sub translate_class { shift->config_or_die->class_human_to_remedy (@_) }
+sub translate_class   { shift->config_or_die->class_human_to_remedy (@_) }
+sub untranslate_class { shift->config_or_die->class_remedy_to_human (@_) }
 
 =item config_or_die
 

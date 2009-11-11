@@ -28,8 +28,10 @@ week).  This can be adjusted using command-line flags.
 ### Configuration ############################################################
 ##############################################################################
 
+use lib '/afs/ir/users/t/s/tskirvin/private/work/remedy/libremedy-cmdb-perl/lib';
+
 ## Print debugging information?  Set with '--debug', can be set many times
-our $DEBUG = 0;
+our $DEBUG = 1;
 
 ## Which table are we reading from?
 our $TABLE = 'translate';
@@ -56,6 +58,7 @@ use Getopt::Long;
 use Lingua::EN::Inflect qw/inflect/;
 use Pod::Usage;
 use Remedy::CMDB;
+use XML::Writer::Raw;
 
 $0 =~ s%.*/%%g;     # Lose the annoying path information
 $|++;               # Flush output
@@ -64,7 +67,7 @@ $|++;               # Flush output
 ### main () ##################################################################
 ##############################################################################
 
-our $LOGGER   = Remedy::CMDB::Log->get_logger;
+our $LOGGER = Remedy::Log->get_logger;
 
 ## we create the config item first so we can do logging and such
 my $config = eval { Remedy::CMDB::Config->load () };
@@ -103,19 +106,52 @@ my $table = $cmdb->translate_class ($TABLE)
 my $remedy = $cmdb->remedy || exit_error ('no remedy connection');
 my @stale = $remedy->read ($table, $query);
 my $count = scalar @stale;
-print inflect ("NUM($count) stale PL_N(entry)"), 
-    " in dataset '$dataset' (", inflect ("NUM($HOURS) PL_N(hour)"), 
-    "), sorted by '$SORT'\n";
 
+$LOGGER->warn (inflect ("NUM($count) stale PL_N(entry)"), 
+    " in dataset '$dataset' (", inflect ("NUM($HOURS) PL_N(hour)"), 
+    "), sorted by '$SORT'");
+
+
+my $string;
+my $writer = XML::Writer::Raw->new ('OUTPUT' => \$string,
+    'DATA_INDENT' => 4, 'NEWLINES' => 0, 'DATA_MODE' => 1, 'UNSAFE' => 1);
+
+$writer->startTag ('staleReportResponse');
 foreach my $item (sort $SORT_FUNC @stale) {
-    print "\n", scalar format_stale_report ($item);
+    format_stale_xml ($item, $writer, $cmdb);
 }
+$writer->endTag;
+$writer->end;
+
+print $string;
 
 exit 0;
 
 ##############################################################################
 ### Subroutines ##############################################################
 ##############################################################################
+
+sub format_stale_xml {
+    my ($item, $writer, $cmdb) = @_;
+
+    $writer->startTag ('staleInstanceResponse');
+
+    $writer->startTag ('instanceId');
+    $writer->write_elem_or_raw ('mdrId',   $item->get ('mdrId'));
+    $writer->write_elem_or_raw ('localId', $item->get ('localId'));
+    $writer->endTag ();
+
+    my $class_real = $item->get ('ClassId');
+    my $class = $cmdb->untranslate_class ($class_real) || $class_real;
+    $writer->startTag ($class);
+    $writer->write_elem_or_raw ('createDate', $item->get ('Create Date'));
+    $writer->write_elem_or_raw ('updateDate', $item->get ('Last Seen'));
+    $writer->endTag ();
+
+    $writer->endTag ();
+    
+    return;
+}
 
 sub format_stale_report {
     my ($item) = @_;
