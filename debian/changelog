@@ -1,8 +1,9 @@
-libremedy-cmdb-perl (0.52.01) UNRELEASED; urgency=low
+libremedy-cmdb-perl (0.52.03) UNRELEASED; urgency=low
 
   * Added 'cmdb-stale' script.
+  * 'cmdb-submit' now bypasses the client-server stuff.
 
- -- Tim Skirvin <tskirvin@stanford.edu>  Mon, 02 Nov 2009 16:14:34 -0800
+ -- Tim Skirvin <tskirvin@stanford.edu>  Mon, 14 Dec 2009 10:43:35 -0800
 
 libremedy-cmdb-perl (0.52.00) UNRELEASED; urgency=low
 

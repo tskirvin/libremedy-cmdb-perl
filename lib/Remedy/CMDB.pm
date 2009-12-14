@@ -1,5 +1,5 @@
 package Remedy::CMDB;
-our $VERSION = "0.52.02";
+our $VERSION = "0.52.03";
 # Copyright and license are in the documentation below.
 
 =head1 NAME

@@ -2,7 +2,7 @@
 REMEDY_HOME=/afs/ir/users/t/s/tskirvin/work/remedy/libremedy-perl
 REMEDY_CMDB_HOME=/afs/ir/users/t/s/tskirvin/work/remedy/libremedy-cmdb-perl
 
-SUBMIT=cmdb-submit-register
+SUBMIT=cmdb-submit
 DEREG_SUBMIT=cmdb-submit-deregister
 REGISTER=cmdb-register
 
@@ -12,7 +12,7 @@ XML_DEREG=${REMEDY_CMDB_HOME}/sample/sample-dereg.cmdbf.xml
 XML_SUNIA=/afs/ir/service/cmdb/data/in/short.xml
 # XML_SUNIA=/afs/ir/group/networking/www/monitor/test/cmdb/cmdb.xml
 XML_WINDOWS=${REMEDY_CMDB_HOME}/sample/w.xml
-XML_TEST=${REMEDY_CMDB_HOME}/sample/1.xml
+XML_TEST=${REMEDY_CMDB_HOME}/sample/local-1.xml
 XML=${REMEDY_CMDB_HOME}/sample/sample-reg.cmdbf.xml
 PERLLIB="${REMEDY_CMDB_HOME}/lib:${REMEDY_HOME}/lib"
 
@@ -60,7 +60,10 @@ windows:
 	@PERLLIB=${PERLLIB} ${REMEDY_CMDB_HOME}/bin/${SUBMIT} < ${XML_WINDOWS}
 
 system-register:
-	PERLLIB=$(PERLLIB) ${REMEDY_CMDB_HOME}/bin/cmdb-remctl < ${XML}
+	PERLLIB=$(PERLLIB) ${REMEDY_CMDB_HOME}/bin/cmdb-remctl cmdb-sandbox.stanford.edu < ${XML}
 
 test:
 	PERLLIB=$(PERLLIB) ${REMEDY_CMDB_HOME}/bin/${SUBMIT} < ${XML_TEST}
+
+test-debug:
+	PERLLIB=$(PERLLIB) ${REMEDY_CMDB_HOME}/bin/${SUBMIT} ${DEBUG} < ${XML_TEST}

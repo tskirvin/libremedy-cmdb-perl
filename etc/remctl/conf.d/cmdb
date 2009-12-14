@@ -1,5 +1,5 @@
 # /etc/remctl/conf.d/cmdb
 
-cmdb register /usr/bin/cmdb-register stdin=last /etc/remctl/acl/operations
-cmdb query    /usr/bin/cmdb-query    stdin=last /etc/remctl/acl/operations
-cmdb stale    /usr/bin/cmdb-stale    /etc/remctl/acl/operations
+cmdb register /usr/bin/cmdb-submit stdin=last /etc/remctl/acl/cmdb
+cmdb query    /usr/bin/cmdb-query  stdin=last /etc/remctl/acl/cmdb /etc/remctl/acl/operations
+cmdb stale    /usr/bin/cmdb-stale             /etc/remctl/acl/cmdb /etc/remctl/acl/operations

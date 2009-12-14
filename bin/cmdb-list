@@ -3,24 +3,16 @@
 
 =head1 NAME
 
-cmdb-stale - list stale CIs from the translation table
+cmdb-list - list stale CIs from the translation table
 
 =head1 SYNOPSIS
 
-B<cmdb-stale> I<MDR>
-
-B<cmdb-stale> I<MDR> --hours I<HOURS>
-
-B<cmdb-stale> I<MDR> --days I<DAYS>
+B<cmdb-list> I<MDR>
 
 =head1 
 
-cmbb-stable lists CIs (entries) in the translation table that are "stale" -
-that is, have not been touched in a certain number of hours.  I<MDR> is the
-dataset that we will search.  
-
-By default, a CI is considered stale if it hasn't been updated in 168 hours (1
-week).  This can be adjusted using command-line flags.
+cmbb-list lists CIs (entries) in the translation table from a given
+dataset I<MDR>.
 
 =cut
 
@@ -29,7 +21,7 @@ week).  This can be adjusted using command-line flags.
 ##############################################################################
 
 ## Print debugging information?  Set with '--debug', can be set many times
-our $DEBUG = 0;
+our $DEBUG = 1;
 
 ## Which table are we reading from?
 our $TABLE = 'translate';
@@ -76,8 +68,6 @@ exit_error ("could not load CMDB configuration: $@") unless $config;
 my $parser = new Getopt::Long::Parser;
 my $result = $parser->getoptions (
     'd|debug+'=> \$DEBUG,
-    'days=f'  => sub { $HOURS = $_[1] * 24 },
-    'hours=f' => sub { $HOURS = $_[1] },
     'sort=s'  => \$SORT,
     'man'     => sub { pod2usage (-verbose => 2, -noperldoc => 1) },
     'h|help'  => sub { pod2usage (-verbose => 1) }) || error_usage ();
@@ -96,8 +86,7 @@ my $cmdb = eval { Remedy::CMDB->connect ('config' => $config,
     'debug' => $DEBUG) } || exit_error ("couldn't create CMDB object: $@");
 exit_error ($@) if $@;
 
-my $too_old = time - $HOURS * 3600;
-my $query = { 'Last Seen' => "-$too_old", 'DatasetId' => $dataset };
+my $query = { 'DatasetId' => $dataset };
 
 my $table = $cmdb->translate_class ($TABLE) 
     || exit_error ("invalid table: '$TABLE'");
@@ -106,23 +95,13 @@ my $remedy = $cmdb->remedy || exit_error ('no remedy connection');
 my @stale = $remedy->read ($table, $query);
 my $count = scalar @stale;
 
-$LOGGER->warn (inflect ("NUM($count) stale PL_N(entry)"), 
-    " in dataset '$dataset' (", inflect ("NUM($HOURS) PL_N(hour)"), 
-    "), sorted by '$SORT'");
+$LOGGER->warn (inflect ("NUM($count) PL_N(entry)"), 
+    " in dataset '$dataset', sorted by '$SORT'");
 
-
-my $string;
-my $writer = XML::Writer::Raw->new ('OUTPUT' => \$string,
-    'DATA_INDENT' => 4, 'NEWLINES' => 0, 'DATA_MODE' => 1, 'UNSAFE' => 1);
-
-$writer->startTag ('staleReportResponse');
 foreach my $item (sort $SORT_FUNC @stale) {
-    format_stale_xml ($item, $writer, $cmdb);
+    my $report = format_report ($item, $cmdb);
+    print $report;
 }
-$writer->endTag;
-$writer->end;
-
-print $string;
 
 exit 0;
 
@@ -130,47 +109,16 @@ exit 0;
 ### Subroutines ##############################################################
 ##############################################################################
 
-sub format_stale_xml {
-    my ($item, $writer, $cmdb) = @_;
-
-    $writer->startTag ('staleInstanceResponse');
-
-    $writer->startTag ('instanceId');
-    $writer->write_elem_or_raw ('mdrId',   $item->get ('mdrId'));
-    $writer->write_elem_or_raw ('localId', $item->get ('localId'));
-    $writer->endTag ();
+sub format_report {
+    my ($item, $cmdb) = @_;
+    
+    my $external = $item->get ('External InstanceId') || 'unknown';
+    my $localId  = $item->get ('localId') || 'unknown';
 
     my $class_real = $item->get ('ClassId');
     my $class = $cmdb->untranslate_class ($class_real) || $class_real;
-    $writer->startTag ($class);
-    $writer->write_elem_or_raw ('createDate', $item->get ('Create Date'));
-    $writer->write_elem_or_raw ('updateDate', $item->get ('Last Seen'));
-    $writer->endTag ();
 
-    $writer->endTag ();
-    
-    return;
-}
-
-sub format_stale_report {
-    my ($item) = @_;
-    
-    my $lastseen = $item->get ('Last Seen')           || 'unknown';
-    my $external = $item->get ('External InstanceId') || 'unknown';
-    my $localId  = $item->get ('localId')             || 'unknown';
-    my $mdrId    = $item->get ('mdrId')               || 'unknown';
-    my $internal = $item->get ('Internal InstanceId') || 'unknown';
-    my $dataset  = $item->get ('DatasetId')           || 'unknown';
-    my $classid  = $item->get ('ClassId')             || 'unknown';
-    my $create   = $item->get ('Create Date')         || 'unknown';
-
-    my @return = sprintf ("%-59s  %19s", $localId, $classid);
-    push @return, 
-        sprintf ("  Updated: %23s    Created: %23s", $lastseen, $create);
-    push @return, sprintf ("  IntID: %-30s   MDR: %s", $internal, $mdrId);
-    push @return, "  ExtId: $external";
-
-    return wantarray ? @return : join ("\n", @return, '');
+    return sprintf ("%-20.20s  %s\n", $class, $localId);
 }
 
 sub exit_error { 
@@ -197,20 +145,9 @@ sub error_usage {
 Increase the debugging level of the run.  Can be added multiple times, each of
 which will add significant additional debug info.
 
-=item B<--days> I<DAYS>
-
-How many days old do we count as 'stale'?  Defaults to 7 (or 168 hours).
-
 =item B<-h>, B<--help>
 
 Prints out the synopsis information and exits.
-
-=item B<--hours> I<HOURS>
-
-How many hours old do we count as 'stale'?  Defaults to 168 hours.
-
-(Note that if both --hours and --days are offered, we will use the last item on
-the command-line.)
 
 =item B<--man>
 

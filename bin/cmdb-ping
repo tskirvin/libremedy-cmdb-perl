@@ -1,0 +1,131 @@
+#!/usr/bin/perl
+# Copyright and license are in the documentation below.
+
+=head1 NAME
+
+cmdb-ping - confirms that the cmdb-server is running
+
+=head1 SYNOPSIS
+
+B<cmdb-ping> 
+
+=head1 
+
+cmdb-ping tries to connect to the local socket using B<Remedy::CMDB::Client>, 
+and cmbb-ping lists CIs (entries) in the translation table from a given
+dataset I<MDR>.
+
+=cut
+
+##############################################################################
+### Configuration ############################################################
+##############################################################################
+
+## Print debugging information?  Set with '--debug', can be set many times
+our $DEBUG = 0;
+
+## How many seconds should we wait for the submission to go through?
+our $ALARM = 5;
+
+##############################################################################
+### Declarations #############################################################
+##############################################################################
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use Pod::Usage;
+use Remedy::CMDB::Client;
+
+$0 =~ s%.*/%%g;     # Lose the annoying path information
+$|++;               # Flush output
+shift @ARGV if $ENV{'REMOTE_USER'};    # support for remctl use
+
+##############################################################################
+### main () ##################################################################
+##############################################################################
+
+our $LOGGER = Remedy::Log->get_logger;
+
+## this is the only place we're going to use non-XML exit error strings
+my $parser = new Getopt::Long::Parser;
+my $result = $parser->getoptions (
+    'd|debug+'=> \$DEBUG,
+    'man'     => sub { pod2usage (-verbose => 2, -noperldoc => 1) },
+    'h|help'  => sub { pod2usage (-verbose => 1) });
+exit_error ('bad command-line options') unless $result;
+
+## we create the config item first so we can do logging and such
+my $config = eval { Remedy::CMDB::Config->load () };
+exit_error ("could not load CMDB configuration: $@") unless $config;
+$config->log->more_logging ($DEBUG) if $DEBUG;
+
+## don't start the alarm until after we've parsed the string
+$SIG{ALRM} = sub { exit_error ("$0: timeout ($ALARM seconds)") };
+alarm $ALARM;
+
+## Create our Remedy connection
+my $client = Remedy::CMDB::Client->connect ('config' => $config, 
+    'debug' => $DEBUG);
+if ($client) {
+    $client->logger_or_die->warn ("socket is open");
+    $client->socket->close;
+} else { 
+    exit_error ("failed to connect to socket: $@\n");
+}
+
+exit 0;
+
+##############################################################################
+### Subroutines ##############################################################
+##############################################################################
+
+sub exit_error { 
+    my ($error) = @_;
+    $LOGGER->logdie (@_);
+}
+
+##############################################################################
+### Final Documentation ######################################################
+##############################################################################
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-d>, B<--debug>
+
+Increase the debugging level of the run.  Can be added multiple times, each of
+which will add significant additional debug info.
+
+=item B<-h>, B<--help>
+
+Prints out the synopsis information and exits.
+
+=item B<--man>
+
+Prints this manual page and exit.
+
+=head1 REQUIREMENTS
+
+B<Remedy::CMDB::Client>
+
+=head1 HOMEPAGE
+
+TBD.
+
+=head1 AUTHOR
+
+Tim Skirvin <tskirvin@stanford.edu>
+
+Based on work by Adam Lewenberg <adamhl@stanford.edu>
+
+=head1 LICENSE
+
+Copyright 2009 Board of Trustees, Leland Stanford Jr. University
+
+This program is free software; you may redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
