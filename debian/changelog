@@ -1,3 +1,10 @@
+libremedy-cmdb-perl (0.53.00) UNRELEASED; urgency=low
+
+  * Removing client/server scripts from the distribution.
+  * Added '--timeout' to cmdb-submit
+
+ -- Tim Skirvin <tskirvin@stanford.edu>  Tue, 15 Dec 2009 10:37:38 -0800
+
 libremedy-cmdb-perl (0.52.03) UNRELEASED; urgency=low
 
   * Added 'cmdb-stale' script.

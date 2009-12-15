@@ -3,26 +3,18 @@
 
 =head1 NAME
 
-cmdb-submit - maintain an active connection to the Remedy CMDB
+cmdb-submit - takes XML on STDIN, and sends it to the CMDB
 
 =head1 SYNOPSIS
 
-B<cmdb-submit> [--debug]
-
-B<cmdb-submit> --daemon
+B<cmdb-submit> [--debug] [--timeout I<TIME>]
 
 =head1 DESCRIPTION
 
-cmdb-submit
-
-
-(Note that this times out.  If you want to submit without timeouts, use
-something else.)
-
-cmdb-submit is a daemon that does three things: it listens for input XML on a
-unix-domain socket, it maintains an ongoing connection to the Remedy CMDB into
-which the data is passed, and it logs information about how this data flow is
-working.  This effectively offers a static version of cmdb-submit(1).
+B<cmdb-register> takes an XML-formatted registration, parses the request to
+confirm that the XML is valid, and passes it off to the configured CMDB.  It
+does this without using a client-server model, and by default times out after
+60 seconds.
 
 =cut
 
@@ -68,6 +60,7 @@ exit_error ("could not load CMDB configuration: $@") unless $config;
 my $parser = Getopt::Long::Parser->new;
 my $result = $parser->getoptions (
     'd|debug+'      => \$DEBUG,
+    'timeout=s'     => \$ALARM,
     'man'           => sub { pod2usage (-verbose => 2, -noperldoc => 1) },
     'h|help'        => sub { pod2usage (-verbose => 1) }) || error_usage ();
 
@@ -133,23 +126,42 @@ sub exit_error { Remedy::CMDB::Response->exit_error (@_) }
 ### Final Documentation ######################################################
 ##############################################################################
 
+=head1 OPTIONS
+
+=over 4
+
+=item B<-d>, B<--debug>
+
+Increase the debugging level of the run.  Can be added multiple times, each of
+which will add significant additional debug info.
+
+=item B<-h>, B<--help>
+
+Prints out the synopsis information and exits.
+
+=item B<--man>
+
+Prints this manual page and exit.
+
+=item B<--timeout> I<TIME>
+
+Seconds to wait for the request to complete.  If set to 0, then we will have no
+timeout (useful for submitting very large data sets).  Defaults to 60.
+
+=back
+
 =head1 TODO
 
-Right now, more than one connection at a time doesn't work that well.  This
-doesn't seem to be much of a problem, but it'd be nice if we could make things
-work properly.
-
-Should daemon mode be the default?
+Need to put the kerberos principal check in.
 
 =head1 REQUIREMENTS
 
-B<Remedy::CMDB::Server>
+B<Remedy::CMDB>, B<Remedy::CMDB::Config>, B<Remedy::CMDB::Client>,
+B<Remedy::CMDB::Response> B<Remedy::CMDB::Server::XML>,
 
 =head1 SEE ALSO
 
 B<Remedy::CMDB::Config>
-
-cmdb-register(1), cmdb-submit(1)
 
 =head1 HOMEPAGE
 

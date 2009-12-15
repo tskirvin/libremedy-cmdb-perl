@@ -9,3 +9,9 @@ bin/Makefile
 ^Remedy-CMDB
 sample/local
 blib
+lib/Remedy/CMDB/Template/CI.pm
+bin/cmdb-server
+bin/cmdb-submit-
+bin/cmdb-ping
+todo.txt
+bin/cmdb-register

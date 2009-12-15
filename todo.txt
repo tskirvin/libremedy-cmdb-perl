@@ -1,0 +1,2 @@
+INFO Level stuff is only logging to the logfile if some '--debug' flags
+are listed.

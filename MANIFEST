@@ -1,11 +1,9 @@
 bin/cmdb-clear
-bin/cmdb-register
+bin/cmdb-list
 bin/cmdb-remctl
-bin/cmdb-server
 bin/cmdb-stale
-bin/cmdb-submit-deregister
-bin/cmdb-submit-query
-bin/cmdb-submit-register
+bin/cmdb-submit
+bin/list-translate
 etc/init.d/cmdb
 etc/remctl/conf.d/cmdb
 etc/remedy/cmdb/classes.csv
@@ -40,6 +38,7 @@ lib/Remedy/CMDB/Relationship/Record.pm
 lib/Remedy/CMDB/Relationship/Response.pm
 lib/Remedy/CMDB/Relationship/Source.pm
 lib/Remedy/CMDB/Relationship/Target.pm
+lib/Remedy/CMDB/Response.pm
 lib/Remedy/CMDB/Server.pm
 lib/Remedy/CMDB/Server/Response.pm
 lib/Remedy/CMDB/Server/XML.pm
