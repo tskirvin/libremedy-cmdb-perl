@@ -15,3 +15,4 @@ bin/cmdb-submit-
 bin/cmdb-ping
 todo.txt
 bin/cmdb-register
+bin/list-translate

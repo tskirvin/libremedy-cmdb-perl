@@ -61,6 +61,7 @@ if (! scalar @entries) {
     my $count = 0;
     foreach my $entry (@entries) { 
         my $print = $entry->get ('localId');
+        $print ||= '*NO LOCALID*';
         print "$print\n";
     }
 }
@@ -84,17 +85,17 @@ sub error_usage {
 
 =head1 NAME
 
-remedy-dump - print all information from a Remedy table
+list-translate - print all information from a Remedy table
 
 =head1 SYNOPSIS
 
-B<remedy-dump> I<TABLE>
+B<list-translate> I<TABLE>
 
-B<remedy-dump> --help
+B<list-translate> --help
 
 =head1 DESCRIPTION
 
-remedy-dump pulls and prints all entries from the given I<TABLE> in the Remedy
+list-translate pulls and prints all entries from the given I<TABLE> in the Remedy
 database. 
 
 =head1 OPTIONS

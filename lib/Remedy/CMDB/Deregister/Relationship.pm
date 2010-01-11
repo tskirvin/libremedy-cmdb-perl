@@ -1,5 +1,5 @@
 package Remedy::CMDB::Deregister::Relationship;
-our $VERSION = "0.50";
+our $VERSION = "0.51";
 # Copyright and license are in the documentation below.
 
 =head1 NAME
@@ -322,14 +322,6 @@ sub register {
     }
     my $instanceid = $obj->get ('InstanceId')
             or return "could not find instance ID after saving";
-
-    ## Register the fact that we looked at all in the translation table
-    $logger->debug ("registering translation entry for '$name'");
-    my %translate = ('instanceId' => $instanceid, 'datasetId' => $dataset);
-    if (my $trans_error = $cmdb->register_translation (%translate)) {
-        $logger->info ($trans_error);
-        return $trans_error;
-    }
 
     ## Record our success and exit.
     $response->add_accepted ($self, $string, 'obj' => $obj) if $response;

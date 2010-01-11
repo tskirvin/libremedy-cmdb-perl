@@ -41,7 +41,7 @@ our $HOURS = 7 * 24;
 our $SORT = 'default';
 our %SORT_TYPE = (
     'class'   => sub { $a->get ('ClassId')    cmp $b->get ('ClassId')    },
-    'default' => sub { $a->get ('Request Id') <=> $b->get ('Request Id') },
+    'default' => sub { $a->get ('Request ID') <=> $b->get ('Request ID') },
     'time'    => sub { $b->get ('Last Seen')  cmp $a->get ('Last Seen')  },
 );
 
@@ -143,6 +143,7 @@ sub format_stale_xml {
     my $class_real = $item->get ('ClassId');
     my $class = $cmdb->untranslate_class ($class_real) || $class_real;
     $writer->startTag ($class);
+    $writer->write_elem_or_raw ('type',       $item->get ('Type'));
     $writer->write_elem_or_raw ('createDate', $item->get ('Create Date'));
     $writer->write_elem_or_raw ('updateDate', $item->get ('Last Seen'));
     $writer->endTag ();

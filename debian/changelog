@@ -1,4 +1,14 @@
-libremedy-cmdb-perl (0.53.00) UNRELEASED; urgency=low
+libremedy-cmdb-perl (0.54.00) lenny; urgency=low
+
+  * cmdb-stale: bug fixes, now includes <type> field.
+  * CMDB/Deregister/Item.pm, CMDB/Deregister/Relationship.pm: no longer
+    registering with the translation table, to avoid a race condition.
+  * list-translate is not working properly yet, and is not included 
+    in the actual distribution.
+
+ -- Tim Skirvin <tskirvin@stanford.edu>  Fri, 08 Jan 2010 10:55:17 -0800
+
+libremedy-cmdb-perl (0.53.00) karmic; urgency=low
 
   * Removing client/server scripts from the distribution.
   * Added '--timeout' to cmdb-submit

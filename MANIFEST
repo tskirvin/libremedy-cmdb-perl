@@ -3,7 +3,6 @@ bin/cmdb-list
 bin/cmdb-remctl
 bin/cmdb-stale
 bin/cmdb-submit
-bin/list-translate
 etc/init.d/cmdb
 etc/remctl/conf.d/cmdb
 etc/remedy/cmdb/classes.csv
